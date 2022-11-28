@@ -16,4 +16,6 @@ const (
 	Black
 )
 
+const EmptyBoard uint64 = 0
+
 const InitialPositionFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

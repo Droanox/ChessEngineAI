@@ -29,13 +29,15 @@ import "fmt"
 } */
 
 var (
-	PawnAttacks [2][64]uint64
+	PawnAttacks   [2][64]uint64
+	KnightAttacks [64]uint64
 )
 
 func AttackInit() {
 	for i := 0; i < 64; i++ {
 		PawnAttacks[0][i] = MaskPawnAttacks(i, 0)
-		PawnAttacks[0][i] = MaskPawnAttacks(i, 1)
+		PawnAttacks[1][i] = MaskPawnAttacks(i, 1)
+		KnightAttacks[i] = MaskKnightAttacks(i)
 	}
 }
 
