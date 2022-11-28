@@ -15,9 +15,9 @@ import "fmt"
 //   a b c d e f g h
 //
 // (a-h) represents the files
-// (a-8) represents the rank
+// (a-8) represents the ranks
 // (.) represents an empty square
-// (X) represents a square with a piece on
+// (X) represents a square with a piece on it
 //
 
 /* func logicalSum(bitmaps ...uint64) uint64 {
@@ -29,16 +29,14 @@ import "fmt"
 } */
 
 var (
-//pawnAttacks [2][64]uint64
+	PawnAttacks [2][64]uint64
 )
 
-func MaskPawnAttacks(square int, side int) uint64 { // TODO
-	var attack uint64
-	var bitboard uint64
-
-	SetBit(&bitboard, square)
-
-	return attack
+func AttackInit() {
+	for i := 0; i < 64; i++ {
+		PawnAttacks[0][i] = MaskPawnAttacks(i, 0)
+		PawnAttacks[0][i] = MaskPawnAttacks(i, 1)
+	}
 }
 
 func PrintBitboard(bitboard uint64) {

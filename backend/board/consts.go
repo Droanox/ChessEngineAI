@@ -1,6 +1,17 @@
 package board
 
 const (
+	FileAOn uint64 = 72340172838076673 << iota
+	FileBOn
+	FileCOn
+	FileDOn
+	FileEOn
+	FileFOn
+	FileGOn
+	FileHOn
+)
+
+const (
 	White = iota
 	Black
 )
