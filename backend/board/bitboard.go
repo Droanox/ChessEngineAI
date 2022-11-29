@@ -32,6 +32,8 @@ var (
 	PawnAttacks   [2][64]uint64
 	KnightAttacks [64]uint64
 	BishopAttacks [64]uint64
+	RookAttacks   [64]uint64
+	QueenAttacks  [64]uint64
 	KingAttacks   [64]uint64
 )
 
@@ -41,6 +43,8 @@ func AttackInit() {
 		PawnAttacks[1][i] = MaskPawnAttacks(i, 1)
 		KnightAttacks[i] = MaskKnightAttacks(i)
 		BishopAttacks[i] = MaskBishopAttacks(i)
+		RookAttacks[i] = MaskRookAttacks(i)
+		QueenAttacks[i] = BishopAttacks[i] | RookAttacks[i]
 		KingAttacks[i] = MaskKingAttacks(i)
 	}
 }

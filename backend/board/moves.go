@@ -60,20 +60,41 @@ func MaskKnightAttacks(square int) uint64 {
 
 func MaskBishopAttacks(square int) uint64 {
 	var attacks uint64
-	nextRank := square / 8
-	nextFile := square % 8
+	onRank := square / 8
+	onFile := square % 8
 
-	for rank, file := nextRank+1, nextFile+1; rank < 8 && file < 8; rank, file = rank+1, file+1 {
+	for rank, file := onRank+1, onFile+1; rank < 8 && file < 8; rank, file = rank+1, file+1 {
 		attacks |= uint64(1) << (rank*8 + file)
 	}
-	for rank, file := nextRank-1, nextFile+1; rank >= 0 && file < 8; rank, file = rank-1, file+1 {
+	for rank, file := onRank-1, onFile+1; rank >= 0 && file < 8; rank, file = rank-1, file+1 {
 		attacks |= uint64(1) << (rank*8 + file)
 	}
-	for rank, file := nextRank+1, nextFile-1; rank < 8 && file >= 0; rank, file = rank+1, file-1 {
+	for rank, file := onRank+1, onFile-1; rank < 8 && file >= 0; rank, file = rank+1, file-1 {
 		attacks |= uint64(1) << (rank*8 + file)
 	}
-	for rank, file := nextRank-1, nextFile-1; rank >= 0 && file >= 0; rank, file = rank-1, file-1 {
+	for rank, file := onRank-1, onFile-1; rank >= 0 && file >= 0; rank, file = rank-1, file-1 {
 		attacks |= uint64(1) << (rank*8 + file)
+	}
+
+	return attacks
+}
+
+func MaskRookAttacks(square int) uint64 {
+	var attacks uint64
+	onRank := square / 8
+	onFile := square % 8
+
+	for rank := onRank + 1; rank < 8; rank++ {
+		attacks |= uint64(1) << (rank*8 + onFile)
+	}
+	for rank := onRank - 1; rank >= 0; rank-- {
+		attacks |= uint64(1) << (rank*8 + onFile)
+	}
+	for file := onFile + 1; file < 8; file++ {
+		attacks |= uint64(1) << (onRank*8 + file)
+	}
+	for file := onFile - 1; file >= 0; file-- {
+		attacks |= uint64(1) << (onRank*8 + file)
 	}
 
 	return attacks
