@@ -57,3 +57,57 @@ func MaskKnightAttacks(square int) uint64 {
 	}
 	return attacks
 }
+
+func MaskBishopAttacks(square int) uint64 {
+	var attacks uint64
+	nextRank := square / 8
+	nextFile := square % 8
+
+	for rank, file := nextRank+1, nextFile+1; rank < 8 && file < 8; rank, file = rank+1, file+1 {
+		attacks |= uint64(1) << (rank*8 + file)
+	}
+	for rank, file := nextRank-1, nextFile+1; rank >= 0 && file < 8; rank, file = rank-1, file+1 {
+		attacks |= uint64(1) << (rank*8 + file)
+	}
+	for rank, file := nextRank+1, nextFile-1; rank < 8 && file >= 0; rank, file = rank+1, file-1 {
+		attacks |= uint64(1) << (rank*8 + file)
+	}
+	for rank, file := nextRank-1, nextFile-1; rank >= 0 && file >= 0; rank, file = rank-1, file-1 {
+		attacks |= uint64(1) << (rank*8 + file)
+	}
+
+	return attacks
+}
+
+func MaskKingAttacks(square int) uint64 { // TODO
+	var attacks uint64
+	var bitboard uint64
+	SetBit(&bitboard, square)
+
+	if ((bitboard << 7) & ^FileHOn) != EmptyBoard {
+		attacks |= bitboard << 7
+	}
+	if (bitboard << 8) != EmptyBoard {
+		attacks |= bitboard << 8
+	}
+	if ((bitboard << 9) & ^FileAOn) != EmptyBoard {
+		attacks |= bitboard << 9
+	}
+	if ((bitboard << 1) & ^FileAOn) != EmptyBoard {
+		attacks |= bitboard << 1
+	}
+
+	if ((bitboard >> 7) & ^FileAOn) != EmptyBoard {
+		attacks |= bitboard >> 7
+	}
+	if (bitboard >> 8) != EmptyBoard {
+		attacks |= bitboard >> 8
+	}
+	if ((bitboard >> 9) & ^FileHOn) != EmptyBoard {
+		attacks |= bitboard >> 9
+	}
+	if ((bitboard >> 1) & ^FileHOn) != EmptyBoard {
+		attacks |= bitboard >> 1
+	}
+	return attacks
+}

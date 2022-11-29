@@ -12,6 +12,17 @@ const (
 )
 
 const (
+	Rank1On uint64 = 255 << (8 * iota)
+	Rank2On
+	Rank3On
+	Rank4On
+	Rank5On
+	Rank6On
+	Rank7On
+	Rank8On
+)
+
+const (
 	White = iota
 	Black
 )
