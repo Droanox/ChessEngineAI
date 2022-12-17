@@ -1,11 +1,11 @@
 package board
 
-func MaskPawnAttacks(square int, side int) uint64 { // TODO
+func maskPawnAttacks(square int, side uint8) uint64 { // TODO
 	var attacks uint64
 	var bitboard uint64
-	SetBit(&bitboard, square)
+	setBit(&bitboard, square)
 
-	if side == White {
+	if side == Black {
 		if ((bitboard >> 7) & ^FileAOn) != EmptyBoard {
 			attacks |= bitboard >> 7
 		}
@@ -13,7 +13,7 @@ func MaskPawnAttacks(square int, side int) uint64 { // TODO
 			attacks |= bitboard >> 9
 		}
 	}
-	if side == Black {
+	if side == White {
 		if ((bitboard << 9) & ^FileAOn) != EmptyBoard {
 			attacks |= bitboard << 9
 		}
@@ -25,10 +25,10 @@ func MaskPawnAttacks(square int, side int) uint64 { // TODO
 	return attacks
 }
 
-func MaskKnightAttacks(square int) uint64 {
+func maskKnightAttacks(square int) uint64 {
 	var attacks uint64
 	var bitboard uint64
-	SetBit(&bitboard, square)
+	setBit(&bitboard, square)
 
 	if ((bitboard << 6) & (^FileGOn & ^FileHOn)) != EmptyBoard {
 		attacks |= bitboard << 6
@@ -58,7 +58,7 @@ func MaskKnightAttacks(square int) uint64 {
 	return attacks
 }
 
-func MaskBishopAttacks(square int) uint64 {
+func maskBishopAttacks(square int) uint64 {
 	var attacks uint64
 	onRank := square / 8
 	onFile := square % 8
@@ -79,7 +79,7 @@ func MaskBishopAttacks(square int) uint64 {
 	return attacks
 }
 
-func MaskRookAttacks(square int) uint64 {
+func maskRookAttacks(square int) uint64 {
 	var attacks uint64
 	onRank := square / 8
 	onFile := square % 8
@@ -100,10 +100,10 @@ func MaskRookAttacks(square int) uint64 {
 	return attacks
 }
 
-func MaskKingAttacks(square int) uint64 { // TODO
+func maskKingAttacks(square int) uint64 { // TODO
 	var attacks uint64
 	var bitboard uint64
-	SetBit(&bitboard, square)
+	setBit(&bitboard, square)
 
 	if ((bitboard << 7) & ^FileHOn) != EmptyBoard {
 		attacks |= bitboard << 7

@@ -23,10 +23,26 @@ const (
 )
 
 const (
-	White = iota
+	WhitePawnsNum = iota
+	WhiteKnightsNum
+	WhiteBishopsNum
+	WhiteRooksNum
+	WhiteQueensNum
+	WhiteKingNum
+
+	BlackPawnsNum
+	BlackKnightsNum
+	BlackBishopsNum
+	BlackRooksNum
+	BlackQueensNum
+	BlackKingNum
+)
+
+const (
+	White uint8 = iota
 	Black
 )
 
 const EmptyBoard uint64 = 0
 
-const InitialPositionFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+const initialPositionFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

@@ -4,14 +4,14 @@ import "fmt"
 
 //
 // The bitboard format:
-// 8|.|.|.|.|.|.|.|.|
+// 8|X|.|.|.|.|X|.|.|
 // 7|.|.|.|.|.|.|.|.|
 // 6|.|.|.|.|.|.|.|.|
-// 5|.|.|.|.|.|.|.|.|
+// 5|.|.|.|X|.|.|X|.|
 // 4|.|.|.|.|.|.|.|.|
 // 3|.|.|.|.|.|.|.|.|
 // 2|.|.|.|.|.|.|.|.|
-// 1|.|.|.|.|.|.|.|.|
+// 1|.|.|.|.|X|.|.|.|
 //   a b c d e f g h
 //
 // (a-h) represents the files
@@ -20,33 +20,52 @@ import "fmt"
 // (X) represents a square with a piece on it
 //
 
-/* func logicalSum(bitmaps ...uint64) uint64 {
-	var sum uint64
-	for _, value := range bitmaps {
-		sum = sum | value
-	}
-	return sum
-} */
+type ChessBoard struct {
+	WhitePawns   uint64
+	WhiteKnights uint64
+	WhiteBishops uint64
+	WhiteRooks   uint64
+	WhiteQueens  uint64
+	WhiteKing    uint64
+
+	BlackPawns   uint64
+	BlackKnights uint64
+	BlackBishops uint64
+	BlackRooks   uint64
+	BlackQueens  uint64
+	BlackKing    uint64
+
+	//whitePieces uint64
+	//blackPieces uint64
+}
 
 var (
-	PawnAttacks   [2][64]uint64
-	KnightAttacks [64]uint64
-	BishopAttacks [64]uint64
-	RookAttacks   [64]uint64
-	QueenAttacks  [64]uint64
-	KingAttacks   [64]uint64
+	pawnAttacks   [2][64]uint64
+	knightAttacks [64]uint64
+	bishopAttacks [64]uint64
+	rookAttacks   [64]uint64
+	queenAttacks  [64]uint64
+	kingAttacks   [64]uint64
 )
 
-func AttackInit() {
+func attackInit() {
 	for i := 0; i < 64; i++ {
-		PawnAttacks[0][i] = MaskPawnAttacks(i, 0)
-		PawnAttacks[1][i] = MaskPawnAttacks(i, 1)
-		KnightAttacks[i] = MaskKnightAttacks(i)
-		BishopAttacks[i] = MaskBishopAttacks(i)
-		RookAttacks[i] = MaskRookAttacks(i)
-		QueenAttacks[i] = BishopAttacks[i] | RookAttacks[i]
-		KingAttacks[i] = MaskKingAttacks(i)
+		pawnAttacks[White][i] = maskPawnAttacks(i, White)
+		pawnAttacks[Black][i] = maskPawnAttacks(i, Black)
+		knightAttacks[i] = maskKnightAttacks(i)
+		bishopAttacks[i] = maskBishopAttacks(i)
+		rookAttacks[i] = maskRookAttacks(i)
+		queenAttacks[i] = bishopAttacks[i] | rookAttacks[i]
+		kingAttacks[i] = maskKingAttacks(i)
 	}
+}
+
+func (cb *ChessBoard) Init() {
+	attackInit()
+	cb.parseFen(initialPositionFen)
+	whites := cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueens | cb.WhiteKing | cb.WhitePawns
+	blacks := cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueens | cb.BlackKing | cb.BlackPawns
+	PrintBitboard(whites | blacks)
 }
 
 func PrintBitboard(bitboard uint64) {

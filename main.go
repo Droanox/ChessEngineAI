@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/Droanox/ChessEngineAI/backend/board"
+	"github.com/Droanox/ChessEngineAI/src/board"
+	"github.com/Droanox/ChessEngineAI/src/graphics"
 )
 
 /*import (
@@ -23,15 +22,11 @@ const (
 ) */
 
 func main() {
-	/*s := make([]byte, 8)
-	b := board.NewChessBoard()
-	binary.LittleEndian.PutUint64(s, 0x03f79d71b4cb0a89)
-	fmt.Printf("%08b", s)
-	board.PrintOutSimple(b) */
-	var bitboard uint64
-	board.SetBit(&bitboard, 4)
-	board.PrintBitboard(bitboard)
-	bitboard = board.MaskPawnAttacks(4, board.White)
-	board.PrintBitboard(bitboard)
-	fmt.Print("\n")
+	cb := board.ChessBoard{}
+	cb.Init()
+	graphics.Run(cb)
+
+	//bitboard = board.MaskPawnAttacks(4, board.Black)
+	//board.PrintBitboard(bitboard)
+	//fmt.Print(144680345676153346 << 1)
 }
