@@ -25,14 +25,14 @@ type ChessBoard struct {
 	WhiteKnights uint64
 	WhiteBishops uint64
 	WhiteRooks   uint64
-	WhiteQueens  uint64
+	WhiteQueen   uint64
 	WhiteKing    uint64
 
 	BlackPawns   uint64
 	BlackKnights uint64
 	BlackBishops uint64
 	BlackRooks   uint64
-	BlackQueens  uint64
+	BlackQueen   uint64
 	BlackKing    uint64
 
 	//whitePieces uint64
@@ -63,9 +63,9 @@ func attackInit() {
 func (cb *ChessBoard) Init() {
 	attackInit()
 	cb.parseFen(initialPositionFen)
-	whites := cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueens | cb.WhiteKing | cb.WhitePawns
-	blacks := cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueens | cb.BlackKing | cb.BlackPawns
-	PrintBitboard(whites | blacks)
+	//whites := cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
+	//blacks := cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
+	//PrintBitboard(whites | blacks)
 }
 
 func PrintBitboard(bitboard uint64) {

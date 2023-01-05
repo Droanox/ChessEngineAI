@@ -4,35 +4,34 @@ package graphics
 
 import (
 	"fyne.io/fyne/v2"
-	"github.com/Droanox/ChessEngineAI/src/board"
 )
 
-func pieceFromPNG(cb board.ChessBoard) fyne.Resource {
-	switch {
-	case cb.Type(board.WhitePawnsNum) == "WhitePawns":
+func pieceFromPNG(piece string) fyne.Resource {
+	switch piece {
+	case "WhitePawns":
 		return resourceWhitePawnPng
-	case cb.Type(board.WhiteKnightsNum) == "WhiteKnight":
+	case "WhiteKnights":
 		return resourceWhiteKnightPng
-	case cb.Type(board.WhiteBishopsNum) == "WhiteBishop":
+	case "WhiteBishops":
 		return resourceWhiteBishopPng
-	case cb.Type(board.WhiteRooksNum) == "WhiteRook":
+	case "WhiteRooks":
 		return resourceWhiteRookPng
-	case cb.Type(board.WhiteQueensNum) == "WhiteQueen":
+	case "WhiteQueen":
 		return resourceWhiteQueenPng
-	case cb.Type(board.WhiteKingNum) == "WhiteKing":
+	case "WhiteKing":
 		return resourceWhiteKingPng
 
-	case cb.Type(board.BlackPawnsNum) == "BlackPawns":
+	case "BlackPawns":
 		return resourceBlackPawnPng
-	case cb.Type(board.BlackKnightsNum) == "BlackKnight":
+	case "BlackKnights":
 		return resourceBlackKnightPng
-	case cb.Type(board.BlackBishopsNum) == "BlackBishop":
+	case "BlackBishops":
 		return resourceBlackBishopPng
-	case cb.Type(board.BlackRooksNum) == "BlackRook":
+	case "BlackRooks":
 		return resourceBlackRookPng
-	case cb.Type(board.BlackQueensNum) == "BlackQueen":
+	case "BlackQueen":
 		return resourceBlackQueenPng
-	case cb.Type(board.BlackKingNum) == "BlackKing":
+	case "BlackKing":
 		return resourceBlackKingPng
 	}
 

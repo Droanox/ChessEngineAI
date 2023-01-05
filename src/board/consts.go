@@ -27,14 +27,14 @@ const (
 	WhiteKnightsNum
 	WhiteBishopsNum
 	WhiteRooksNum
-	WhiteQueensNum
+	WhiteQueenNum
 	WhiteKingNum
 
 	BlackPawnsNum
 	BlackKnightsNum
 	BlackBishopsNum
 	BlackRooksNum
-	BlackQueensNum
+	BlackQueenNum
 	BlackKingNum
 )
 
@@ -45,4 +45,8 @@ const (
 
 const EmptyBoard uint64 = 0
 
-const initialPositionFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+const initialPositionFen string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+var AllPieceNames = []string{
+	"WhitePawns", "WhiteKnights", "WhiteBishops", "WhiteRooks", "WhiteQueen", "WhiteKing",
+	"BlackPawns", "BlackKnights", "BlackBishops", "BlackRooks", "BlackQueen", "BlackKing"}

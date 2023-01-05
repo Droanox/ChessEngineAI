@@ -11,20 +11,48 @@ func setBit(bitboard *uint64, square int) {
 }
 
 func GetBit(bitboard uint64, square int) bool {
-	return bitboard == (1 << uint64(square))
+	return bitboard == (bitboard | (1 << uint64(square)))
 }
 
-func (cb ChessBoard) GetPiece(square int) string {
-	/*
-		for i := 0; i < 12; i++{
-
+func (cb *ChessBoard) GetPiece(square int) string {
+	for _, p := range AllPieceNames {
+		bitboard := cb.GetPiecesBitboard(p)
+		if GetBit(bitboard, square) {
+			return p
 		}
-		switch cb {
-		case cb.BlackPawns:
-
-		}
-	*/
+	}
 	return "Empty"
+}
+
+func (cb *ChessBoard) GetPiecesBitboard(p string) uint64 {
+	switch p {
+	case "WhitePawns":
+		return cb.WhitePawns
+	case "WhiteKnights":
+		return cb.WhiteKnights
+	case "WhiteBishops":
+		return cb.WhiteBishops
+	case "WhiteRooks":
+		return cb.WhiteRooks
+	case "WhiteQueen":
+		return cb.WhiteQueen
+	case "WhiteKing":
+		return cb.WhiteKing
+
+	case "BlackPawns":
+		return cb.BlackPawns
+	case "BlackKnights":
+		return cb.BlackKnights
+	case "BlackBishops":
+		return cb.BlackBishops
+	case "BlackRooks":
+		return cb.BlackRooks
+	case "BlackQueen":
+		return cb.BlackQueen
+	case "BlackKing":
+		return cb.BlackKing
+	}
+	return EmptyBoard
 }
 
 func (cb ChessBoard) Type(num int) string {
@@ -44,7 +72,7 @@ func (cb *ChessBoard) parseFen(fen string) {
 			rank--
 		} else {
 			if unicode.IsDigit(rune(val)) {
-				file += int(val)
+				file += (int(val) - '0')
 			} else {
 				conv := (8 * rank) + file
 				switch val {
@@ -56,7 +84,7 @@ func (cb *ChessBoard) parseFen(fen string) {
 				case 98:
 					setBit(&cb.BlackBishops, conv)
 				case 113:
-					setBit(&cb.BlackQueens, conv)
+					setBit(&cb.BlackQueen, conv)
 				case 107:
 					setBit(&cb.BlackKing, conv)
 				case 112:
@@ -69,7 +97,7 @@ func (cb *ChessBoard) parseFen(fen string) {
 				case 66:
 					setBit(&cb.WhiteBishops, conv)
 				case 81:
-					setBit(&cb.WhiteQueens, conv)
+					setBit(&cb.WhiteQueen, conv)
 				case 75:
 					setBit(&cb.WhiteKing, conv)
 				case 80:

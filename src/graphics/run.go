@@ -25,15 +25,13 @@ func Run(cb board.ChessBoard) {
 func createBoard(cb board.ChessBoard) *fyne.Container {
 	grid := container.NewGridWithColumns(8)
 
-	for file := 0; file < 8; file++ {
-		for rank := 0; rank < 8; rank++ {
-			b := canvas.NewRectangle(color.RGBA{207, 167, 151, 1})
+	for rank := 8; rank >= 1; rank-- {
+		for file := 1; file <= 8; file++ {
+			b := canvas.NewRectangle(color.RGBA{207, 167, 151, 255})
 			if file%2 == rank%2 {
-				b.FillColor = color.RGBA{150, 75, 45, 1}
+				b.FillColor = color.RGBA{150, 75, 45, 255}
 			}
-
-			//p := cb.Type(board.WhiteBishopsNum)
-			piece := canvas.NewImageFromResource(pieceFromPNG(cb))
+			piece := canvas.NewImageFromResource(pieceFromPNG(cb.GetPiece((rank-1)*8 + (file - 1))))
 			piece.FillMode = canvas.ImageFillContain
 			grid.Add(container.NewMax(b, piece))
 		}
