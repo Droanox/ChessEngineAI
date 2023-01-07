@@ -34,38 +34,77 @@ type ChessBoard struct {
 	BlackRooks   uint64
 	BlackQueen   uint64
 	BlackKing    uint64
-
-	//whitePieces uint64
-	//blackPieces uint64
 }
 
 var (
 	pawnAttacks   [2][64]uint64
 	knightAttacks [64]uint64
-	bishopAttacks [64]uint64
-	rookAttacks   [64]uint64
-	queenAttacks  [64]uint64
+	bishopMasks   [64]uint64
+	bishopAttacks [64][512]uint64
+	rookMasks     [64]uint64
+	rookAttacks   [64][4096]uint64
 	kingAttacks   [64]uint64
 )
 
-func attackInit() {
+func attackLeaperInit() {
 	for i := 0; i < 64; i++ {
-		pawnAttacks[White][i] = maskPawnAttacks(i, White)
-		pawnAttacks[Black][i] = maskPawnAttacks(i, Black)
+		pawnAttacks[White][i] = maskPawnAttacks(White, i)
+		pawnAttacks[Black][i] = maskPawnAttacks(Black, i)
 		knightAttacks[i] = maskKnightAttacks(i)
-		bishopAttacks[i] = maskBishopAttacks(i)
-		rookAttacks[i] = maskRookAttacks(i)
-		queenAttacks[i] = bishopAttacks[i] | rookAttacks[i]
 		kingAttacks[i] = maskKingAttacks(i)
 	}
 }
 
+func attackSliderInit(isBishop bool) {
+	for square := 0; square < 64; square++ {
+		bishopMasks[square] = maskMagicBishopAttacks(square)
+		rookMasks[square] = maskMagicRookAttacks(square)
+		var mask uint64
+		if isBishop {
+			mask = bishopMasks[square]
+		} else {
+			mask = rookMasks[square]
+		}
+		var bitsCounted int = BitCount(mask)
+		var occupancyIndex int = 1 << bitsCounted
+
+		for j := 0; j < occupancyIndex; j++ {
+			var occupancy uint64 = setMagicOccupancies(j, bitsCounted, mask)
+			if isBishop {
+				var magicIndex int = int((occupancy * bishopMagicNumber[square]) >> (64 - bishopBits[square]))
+				bishopAttacks[square][magicIndex] = maskBishopAttacks(square, occupancy)
+			} else {
+				var magicIndex int = int((occupancy * rookMagicNumber[square]) >> (64 - rookBits[square]))
+				rookAttacks[square][magicIndex] = maskRookAttacks(square, occupancy)
+			}
+		}
+	}
+}
+
 func (cb *ChessBoard) Init() {
-	attackInit()
+	attackLeaperInit()
+	attackSliderInit(true)
+	attackSliderInit(false)
+	//Below init is used to get the first iteration of magic number,
+	//It is a set that works, it may not be the best set
+	//MagicInit()
 	cb.parseFen(initialPositionFen)
+}
+
+func (cb *ChessBoard) Test() {
+	var block uint64
 	//whites := cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
 	//blacks := cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
+	setBit(&block, 0)
+	setBit(&block, 9)
+	setBit(&block, 18)
+	setBit(&block, 36)
+	PrintBitboard(GetBishopAttacks(27, block))
+	//PrintBitboard((maskMagicRookAttacks(23) * rookMagicNumber[23]) >> (64 - rookBits[23]))
 	//PrintBitboard(whites | blacks)
+	//PrintBitboard(maskMagicRookAttacks(0))
+	//PrintBitboard(generateMagicNumberCandidate())
+	//PrintBitboard(generateMagicNumberCandidate())
 }
 
 func PrintBitboard(bitboard uint64) {

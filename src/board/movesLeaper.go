@@ -1,6 +1,6 @@
 package board
 
-func maskPawnAttacks(square int, side uint8) uint64 { // TODO
+func maskPawnAttacks(side uint8, square int) uint64 { // TODO
 	var attacks uint64
 	var bitboard uint64
 	setBit(&bitboard, square)
@@ -55,48 +55,6 @@ func maskKnightAttacks(square int) uint64 {
 	if ((bitboard >> 10) & (^FileGOn & ^FileHOn)) != EmptyBoard {
 		attacks |= bitboard >> 10
 	}
-	return attacks
-}
-
-func maskBishopAttacks(square int) uint64 {
-	var attacks uint64
-	onRank := square / 8
-	onFile := square % 8
-
-	for rank, file := onRank+1, onFile+1; rank < 8 && file < 8; rank, file = rank+1, file+1 {
-		attacks |= uint64(1) << (rank*8 + file)
-	}
-	for rank, file := onRank-1, onFile+1; rank >= 0 && file < 8; rank, file = rank-1, file+1 {
-		attacks |= uint64(1) << (rank*8 + file)
-	}
-	for rank, file := onRank+1, onFile-1; rank < 8 && file >= 0; rank, file = rank+1, file-1 {
-		attacks |= uint64(1) << (rank*8 + file)
-	}
-	for rank, file := onRank-1, onFile-1; rank >= 0 && file >= 0; rank, file = rank-1, file-1 {
-		attacks |= uint64(1) << (rank*8 + file)
-	}
-
-	return attacks
-}
-
-func maskRookAttacks(square int) uint64 {
-	var attacks uint64
-	onRank := square / 8
-	onFile := square % 8
-
-	for rank := onRank + 1; rank < 8; rank++ {
-		attacks |= uint64(1) << (rank*8 + onFile)
-	}
-	for rank := onRank - 1; rank >= 0; rank-- {
-		attacks |= uint64(1) << (rank*8 + onFile)
-	}
-	for file := onFile + 1; file < 8; file++ {
-		attacks |= uint64(1) << (onRank*8 + file)
-	}
-	for file := onFile - 1; file >= 0; file-- {
-		attacks |= uint64(1) << (onRank*8 + file)
-	}
-
 	return attacks
 }
 

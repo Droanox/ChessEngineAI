@@ -10,14 +10,55 @@ func setBit(bitboard *uint64, square int) {
 	*bitboard |= (1 << uint64(square))
 }
 
-func GetBit(bitboard uint64, square int) bool {
+func getBit(bitboard uint64, square int) uint64 {
+	return bitboard & (1 << uint64(square))
+}
+
+func popBit(bitboard *uint64, square int) {
+	*bitboard ^= getBit(*bitboard, square)
+}
+
+func isBitOn(bitboard uint64, square int) bool {
 	return bitboard == (bitboard | (1 << uint64(square)))
+}
+
+// The "Brian Kernighan's way" of couting bits on a bitboard,
+// implementation idea from chess programming wiki
+func BitCount(bitboard uint64) int {
+	count := 0
+	for bitboard != EmptyBoard {
+		count++
+		bitboard &= bitboard - 1
+	}
+	return count
+}
+
+func BitScanForward(bitboard uint64) int {
+	const debruijn64 uint64 = 0x03f79d71b4cb0a89
+	if bitboard != 0 {
+		return index64[((bitboard^(bitboard-1))*debruijn64)>>58]
+	}
+	return -1
+}
+
+func BitScanReverse(bitboard uint64) int {
+	const debruijn64 uint64 = 0x03f79d71b4cb0a89
+	bitboard |= bitboard >> 1
+	bitboard |= bitboard >> 2
+	bitboard |= bitboard >> 4
+	bitboard |= bitboard >> 8
+	bitboard |= bitboard >> 16
+	bitboard |= bitboard >> 32
+	if bitboard != 0 {
+		return index64[(bitboard*debruijn64)>>58]
+	}
+	return -1
 }
 
 func (cb *ChessBoard) GetPiece(square int) string {
 	for _, p := range AllPieceNames {
 		bitboard := cb.GetPiecesBitboard(p)
-		if GetBit(bitboard, square) {
+		if isBitOn(bitboard, square) {
 			return p
 		}
 	}
@@ -60,7 +101,8 @@ func (cb ChessBoard) Type(num int) string {
 	return b.Field(num).Name
 }
 
-// "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNN w KQkq - 0 1"
+// Parses a fen string for example: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNN w KQkq - 0 1"
+// onto the chessboard and maps every pieces bitboard to the relevant pieces
 func (cb *ChessBoard) parseFen(fen string) {
 	fenRep := strings.Split(fen, " ")
 	file := 0

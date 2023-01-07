@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/Droanox/ChessEngineAI/src/board"
-	"github.com/Droanox/ChessEngineAI/src/graphics"
 )
 
 // command to run to create the .exe
@@ -10,5 +9,6 @@ import (
 func main() {
 	cb := board.ChessBoard{}
 	cb.Init()
-	graphics.Run(cb)
+	cb.Test()
+	//graphics.Run(cb)
 }
