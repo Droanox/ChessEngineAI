@@ -151,16 +151,8 @@ func GetRookAttacks(square int, occupancy uint64) uint64 {
 	return rookAttacks[square][occupancy]
 }
 
-func setMagicOccupancies(start int, end int, mask uint64) uint64 {
-	occupancy := uint64(0)
-	for i := 0; i < end; i++ {
-		square := BitScanForward(mask)
-		popBit(&mask, square)
-		if start&(1<<i) != 0 {
-			occupancy |= (1 << square)
-		}
-	}
-	return occupancy
+func GetQueenAttacks(square int, occupancy uint64) uint64 {
+	return GetBishopAttacks(square, occupancy) | GetRookAttacks(square, occupancy)
 }
 
 // Functions from this point on is Tord Romstad's proposal to find magics,
@@ -181,6 +173,18 @@ func generateMagicNumberCandidate() uint64 {
 	r2 := getRandomUINT64()
 	r3 := getRandomUINT64()
 	return r1 & r2 & r3
+}
+
+func setMagicOccupancies(start int, end int, mask uint64) uint64 {
+	occupancy := uint64(0)
+	for i := 0; i < end; i++ {
+		square := BitScanForward(mask)
+		popBit(&mask, square)
+		if start&(1<<i) != 0 {
+			occupancy |= (1 << square)
+		}
+	}
+	return occupancy
 }
 
 func findMagic(square int, bits int, isBishop bool) uint64 {

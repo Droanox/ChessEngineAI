@@ -34,6 +34,9 @@ type ChessBoard struct {
 	BlackRooks   uint64
 	BlackQueen   uint64
 	BlackKing    uint64
+
+	WhitePieces uint64
+	BlackPieces uint64
 }
 
 var (
@@ -82,29 +85,34 @@ func attackSliderInit(isBishop bool) {
 }
 
 func (cb *ChessBoard) Init() {
+	// Below init is used to inisialse the pawn, knight, and king pieces
 	attackLeaperInit()
+	// Below init is used to initalise the bishop and then rook for each
+	// function respectively
 	attackSliderInit(true)
 	attackSliderInit(false)
-	//Below init is used to get the first iteration of magic number,
-	//It is a set that works, it may not be the best set
-	//MagicInit()
-	cb.parseFen(initialPositionFen)
+	// Below init is used to get the first iteration of magic number, It is
+	// a set that works, it may not be the best set, only need to do it once,
+	// and output is used as a variable
+	// MagicInit()
+	cb.parseFen("rnb1k2r/pp3pp1/4pq1p/1pp5/1bBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9")
+	/*
+		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+		const TestFEN1 string = "rnb1k2r/pp3pp1/4pq1p/2p5/1bBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9"
+		const TestFEN2 string = "2br2k1/6p1/1p2p2p/5pb1/N2p4/PR6/1P3PPP/R5K1 b - - 4 29"
+		const TestFEN3 string = "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3"
+
+		Castling tests:
+		r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1 - can castle
+		rN2k1Nr/8/8/8/8/8/8/RN2K1NR w KQkq - 0 1 - cant castle because attacked
+		r3k2r/8/8/4R3/4r3/8/8/R3K2R w KQkq - 0 1 - cant castle because blocked
+	*/
 }
 
 func (cb *ChessBoard) Test() {
-	var block uint64
-	//whites := cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
-	//blacks := cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
-	setBit(&block, 0)
-	setBit(&block, 9)
-	setBit(&block, 18)
-	setBit(&block, 36)
-	PrintBitboard(GetBishopAttacks(27, block))
-	//PrintBitboard((maskMagicRookAttacks(23) * rookMagicNumber[23]) >> (64 - rookBits[23]))
-	//PrintBitboard(whites | blacks)
-	//PrintBitboard(maskMagicRookAttacks(0))
-	//PrintBitboard(generateMagicNumberCandidate())
-	//PrintBitboard(generateMagicNumberCandidate())
+	cb.PrintChessBoard()
+	cb.GenerateMoves()
+	//PrintBitboard(pawnAttacks[Black][SquareToInt["a7"]])
 }
 
 func PrintBitboard(bitboard uint64) {
@@ -122,3 +130,58 @@ func PrintBitboard(bitboard uint64) {
 	}
 	fmt.Print("  a b c d e f g h\n")
 }
+
+func (cb ChessBoard) PrintChessBoard() {
+	PrintBitboard(cb.WhitePieces | cb.BlackPieces)
+	if SideToMove == White {
+		fmt.Printf("\nSide to move: %s", "White")
+	} else {
+		fmt.Printf("\nSide to move: %s", "Black")
+	}
+	fmt.Printf("\nCastling rights (KQkq): ")
+	if CastleRights&WhiteKingSide != 0 {
+		fmt.Printf("K")
+	}
+	if CastleRights&WhiteQueenSide != 0 {
+		fmt.Printf("Q")
+	}
+	if CastleRights&BlackKingSide != 0 {
+		fmt.Printf("k")
+	}
+	if CastleRights&BlackQueenSide != 0 {
+		fmt.Printf("q")
+	}
+	if Enpassant == -1 {
+		fmt.Printf("\nEnpassant: %s", "-")
+	} else {
+		fmt.Printf("\nEnpassant: %s", IntToSquare[Enpassant])
+	}
+	fmt.Printf("\nHalf move clock: %d", HalfMoveClock)
+	fmt.Printf("\nFull move counter: %d\n\n", FullMoveCounter)
+}
+
+// Used to test whether the function IsAttackedBySide() returns the correct output
+/*
+func (cb ChessBoard) PrintBitboardIsAttacked(side int) {
+	for rank := 8; rank >= 1; rank-- {
+		fmt.Print(rank)
+		for file := 1; file <= 8; file++ {
+			square := (rank-1)*8 + (file - 1)
+			if cb.IsSquareAttackedBySide(square, side) {
+				fmt.Print("|X")
+			} else {
+				fmt.Print("|.")
+			}
+		}
+		fmt.Print("|\n")
+	}
+	fmt.Print("  a b c d e f g h\n")
+}
+*/
+// Used to print the hexadecimal bitboard representation,
+// which is used to get bit masks
+/*
+func PrintBitboardHex(bitboard uint64) {
+	fmt.Printf("%s\n", fmt.Sprintf("0x%X", bitboard))
+}
+*/

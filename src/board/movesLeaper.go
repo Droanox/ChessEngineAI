@@ -1,28 +1,50 @@
 package board
 
+func whitePawnsEastAttacks(pawns uint64) uint64 {
+	return (pawns << 9) & ^FileAOn
+}
+func whitePawnsWestAttacks(pawns uint64) uint64 {
+	return (pawns << 7) & ^FileHOn
+}
+func blackPawnsEastAttacks(pawns uint64) uint64 {
+	return (pawns >> 7) & ^FileAOn
+}
+func blackPawnsWestAttacks(pawns uint64) uint64 {
+	return (pawns >> 9) & ^FileHOn
+}
+
+func whitePawnAnyAttack(pawns uint64) uint64 {
+	return whitePawnsEastAttacks(pawns) | whitePawnsWestAttacks(pawns)
+}
+func blackPawnAnyAttack(pawns uint64) uint64 {
+	return blackPawnsEastAttacks(pawns) | blackPawnsWestAttacks(pawns)
+}
+
+/*
+func whitePawnsAbleToCaptureEast(wPawns uint64, bPawns uint64) uint64 {
+	return wPawns & blackPawnsWestAttacks(bPawns)
+}
+func whitePawnsAbleToCaptureWest(wPawns uint64, bPawns uint64) uint64 {
+	return wPawns & blackPawnsEastAttacks(bPawns)
+}
+func blackPawnsAbleToCaptureEast(wPawns uint64, bPawns uint64) uint64 {
+	return bPawns & whitePawnsWestAttacks(wPawns)
+}
+func blackPawnsAbleToCaptureWest(wPawns uint64, bPawns uint64) uint64 {
+	return bPawns & whitePawnsEastAttacks(wPawns)
+}
+*/
+
 func maskPawnAttacks(side uint8, square int) uint64 { // TODO
-	var attacks uint64
 	var bitboard uint64
 	setBit(&bitboard, square)
-
-	if side == Black {
-		if ((bitboard >> 7) & ^FileAOn) != EmptyBoard {
-			attacks |= bitboard >> 7
-		}
-		if ((bitboard >> 9) & ^FileHOn) != EmptyBoard {
-			attacks |= bitboard >> 9
-		}
-	}
 	if side == White {
-		if ((bitboard << 9) & ^FileAOn) != EmptyBoard {
-			attacks |= bitboard << 9
-		}
-		if ((bitboard << 7) & ^FileHOn) != EmptyBoard {
-			attacks |= bitboard << 7
-		}
+		bitboard = whitePawnAnyAttack(bitboard)
+	} else {
+		bitboard = blackPawnAnyAttack(bitboard)
 	}
 
-	return attacks
+	return bitboard
 }
 
 func maskKnightAttacks(square int) uint64 {
