@@ -1,5 +1,8 @@
 package board
 
+///////////////////////////////////////////////////////////////////
+// Masks
+///////////////////////////////////////////////////////////////////
 // Hexadecimal values for constants taken from
 // chess programming wiki square mapping considerations
 const (
@@ -25,21 +28,16 @@ const (
 )
 
 const (
-	WhitePawnsNum = iota
-	WhiteKnightsNum
-	WhiteBishopsNum
-	WhiteRooksNum
-	WhiteQueenNum
-	WhiteKingNum
-
-	BlackPawnsNum
-	BlackKnightsNum
-	BlackBishopsNum
-	BlackRooksNum
-	BlackQueenNum
-	BlackKingNum
+	White = 0b0
+	Black = 0b1
 )
 
+const EmptyBoard uint64 = 0x0000000000000000
+const UniverseBoard uint64 = 0xffffffffffffffff
+
+///////////////////////////////////////////////////////////////////
+// FEN string consts and vars
+///////////////////////////////////////////////////////////////////
 const (
 	WhiteKingSide  = 0b0001
 	WhiteQueenSide = 0b0010
@@ -47,22 +45,78 @@ const (
 	BlackQueenSide = 0b1000
 )
 
-const (
-	White = 0b0
-	Black = 0b1
-)
-
-const EmptyBoard uint64 = 0x0000000000000000
-const UniverseBoard uint64 = 0xffffffffffffffff
-const InitialPositionFen string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
 var AllPieceNames = []string{
 	"WhitePawns", "WhiteKnights", "WhiteBishops", "WhiteRooks", "WhiteQueen", "WhiteKing",
 	"BlackPawns", "BlackKnights", "BlackBishops", "BlackRooks", "BlackQueen", "BlackKing",
 }
 
+const InitialPositionFen string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+var (
+	// White = 0, Black = 1
+	SideToMove int = 0
+
+	// None = 0, white king side = 1, white queen side = 2, black king side = 4, black queen side = 8,
+	// and all available will be the additions of them e.g.
+	// 13 = 1101 = white king side, black king side, black queen side
+	CastleRights int = 0
+
+	// -1 for no enpassant, and 0-63 for square index of enpassant
+	Enpassant int = -1
+
+	// Counts every half move made, resets to 0 if a pawn is moved or piece is taken,
+	// used for the 50 move draw rule
+	HalfMoveClock int = 0
+
+	// Counts the number of full moves made in a game, it starts at 1 and increments
+	// every time black moves
+	FullMoveCounter int = 0
+)
+
+///////////////////////////////////////////////////////////////////
+// Movegen consts and vars
+///////////////////////////////////////////////////////////////////
+
+const (
+	EmptyPiece = 0x0 // 0000 0000 0000 0000 0000 0000
+	Pawn       = 0x1 // 0000 0000 0001 0000 0000 0000
+	Knight     = 0x2 // 0000 0000 0010 0000 0000 0000
+	Bishop     = 0x3 // 0000 0000 0011 0000 0000 0000
+	Rook       = 0x4 // 0000 0000 0100 0000 0000 0000
+	Queen      = 0x5 // 0000 0000 0101 0000 0000 0000
+	King       = 0x6 // 0000 0000 0110 0000 0000 0000
+)
+
+const (
+	/*
+		MoveStart                  = 0x3f   //  0000 0000 0000 0000 0011 1111
+		MoveEnd                    = 0xfc0  //  0000 0000 0000 1111 1100 0000
+	*/
+	MoveQuiet                  = 0x0 // 0000 0000 0000 0000 0000 0000
+	MoveDoublePawn             = 0x1 // 0001 0000 0000 0000 0000 0000
+	MoveKingCastle             = 0x2 // 0010 0000 0000 0000 0000 0000
+	MoveQueenCastle            = 0x3 // 0011 0000 0000 0000 0000 0000
+	MoveCaptures               = 0x4 // 0100 0000 0000 0000 0000 0000
+	MoveEnpassantCapture       = 0x5 // 0101 0000 0000 0000 0000 0000
+	MoveKnightPromotion        = 0x8 // 1000 0000 0000 0000 0000 0000
+	MoveBishopPromotion        = 0x9 // 1001 0000 0000 0000 0000 0000
+	MoveRookPromotion          = 0xA // 1010 0000 0000 0000 0000 0000
+	MoveQueenPromotion         = 0xB // 1011 0000 0000 0000 0000 0000
+	MoveKnightPromotionCapture = 0xC // 1100 0000 0000 0000 0000 0000
+	MoveBishopPromotionCapture = 0xD // 1101 0000 0000 0000 0000 0000
+	MoveRookPromotionCapture   = 0xE // 1110 0000 0000 0000 0000 0000
+	MoveQueenPromotionCapture  = 0xF // 1111 0000 0000 0000 0000 0000
+)
+
+var IntToPiece = [7]string{
+	"Empty", "Pawn", "Knight", "Bishop", "Rook", "Queen", "King",
+}
+
+///////////////////////////////////////////////////////////////////
+// General util consts and vars
+///////////////////////////////////////////////////////////////////
 // Kim Walisch's proposed ones' decrement to compute
-// the least significant 1 bit
+// the least significant 1 bit used in BitScanForward()
 var index64 = [64]int{
 	0, 47, 1, 56, 48, 27, 2, 60,
 	57, 49, 41, 37, 28, 16, 3, 61,
@@ -86,7 +140,7 @@ var IntToSquare = [64]string{
 	"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 }
 
-// Used to a x-y mapping of a chessboard to the squares index.
+// Used to change a x-y mapping of a chessboard to the squares index.
 var SquareToInt = map[string]int{
 	"a1": 0, "b1": 1, "c1": 2, "d1": 3, "e1": 4, "f1": 5, "g1": 6, "h1": 7,
 	"a2": 8, "b2": 9, "c2": 10, "d2": 11, "e2": 12, "f2": 13, "g2": 14, "h2": 15,
@@ -97,24 +151,3 @@ var SquareToInt = map[string]int{
 	"a7": 48, "b7": 49, "c7": 50, "d7": 51, "e7": 52, "f7": 53, "g7": 54, "h7": 55,
 	"a8": 56, "b8": 57, "c8": 58, "d8": 59, "e8": 60, "f8": 61, "g8": 62, "h8": 63,
 }
-
-var (
-	// White = 0, Black = 1
-	SideToMove int = 0
-
-	// None = 0, white king side = 1, white queen side = 2, black king side = 4, black queen side = 8,
-	// and all available will be the additions of them e.g.
-	// 13 = 1101 = white king side, black king side, black queen side
-	CastleRights int = 0
-
-	// -1 for no enpassant, and 0-63 for square index of enpassant
-	Enpassant int = -1
-
-	// Counts every half move made, resets to 0 if a pawn is moved or piece is taken,
-	// used for the 50 move draw rule
-	HalfMoveClock int = 0
-
-	// Counts the number of full moves made in a game, it starts at 1 and increments
-	// every time black moves
-	FullMoveCounter int = 0
-)

@@ -47,6 +47,7 @@ var (
 	rookMasks     [64]uint64
 	rookAttacks   [64][4096]uint64
 	kingAttacks   [64]uint64
+	indexMasks    [64]uint64
 )
 
 func attackLeaperInit() {
@@ -55,6 +56,7 @@ func attackLeaperInit() {
 		pawnAttacks[Black][i] = maskPawnAttacks(Black, i)
 		knightAttacks[i] = maskKnightAttacks(i)
 		kingAttacks[i] = maskKingAttacks(i)
+		indexMasks[i] = 1 << i
 	}
 }
 
@@ -87,33 +89,50 @@ func attackSliderInit(isBishop bool) {
 func (cb *ChessBoard) Init() {
 	// Below init is used to inisialse the pawn, knight, and king pieces
 	attackLeaperInit()
-	// Below init is used to initalise the bishop and then rook for each
-	// function respectively
+
+	// Below init is used to initalise the bishop and rook attack tables
 	attackSliderInit(true)
 	attackSliderInit(false)
+
 	// Below init is used to get the first iteration of magic number, It is
 	// a set that works, it may not be the best set, only need to do it once,
 	// and output is used as a variable
 	// MagicInit()
-	cb.parseFen("rnb1k2r/pp3pp1/4pq1p/1pp5/1bBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9")
+
+	cb.parseFen("1pbr2k1/P5p1/4p2p/5pb1/N7/1R6/3p1PPP/R1P3K1 w - - 4 29")
 	/*
+		Starting position:
 		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-		const TestFEN1 string = "rnb1k2r/pp3pp1/4pq1p/2p5/1bBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9"
-		const TestFEN2 string = "2br2k1/6p1/1p2p2p/5pb1/N2p4/PR6/1P3PPP/R5K1 b - - 4 29"
-		const TestFEN3 string = "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3"
+
+		Random positions:
+		"rnb1k2r/pp3pp1/4pq1p/2p5/1bBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9"
+		"2br2k1/6p1/1p2p2p/5pb1/N2p4/PR6/1P3PPP/R5K1 b - - 4 29"
 
 		Castling tests:
-		r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1 - can castle
-		rN2k1Nr/8/8/8/8/8/8/RN2K1NR w KQkq - 0 1 - cant castle because attacked
-		r3k2r/8/8/4R3/4r3/8/8/R3K2R w KQkq - 0 1 - cant castle because blocked
+		r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1 // can castle
+		rN2k1Nr/8/8/8/8/8/8/RN2K1NR w KQkq - 0 1 // cant castle because attacked
+		r3k2r/8/8/4R3/4r3/8/8/R3K2R w KQkq - 0 1 // cant castle because blocked
+
+		Enpassant tests:
+		rnbqkbnr/pp1p1ppp/8/2pPp3/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3 // white enpassant
+		rnbqkbnr/pppp1ppp/8/8/3PpPP1/8/PPP1P2P/RNBQKBNR b KQkq f3 0 3 // black enpassant
+
+		Promotion tests:
+		1pbr2k1/P5p1/4p2p/5pb1/N7/1R6/3p1PPP/R1P3K1 w - - 4 29 // white capture promotion
+		2br2k1/6p1/1p2p2p/5pb1/N7/PR6/3p1PPP/R1P3K1 b - - 4 29 // black capture promotion
 	*/
 }
 
 func (cb *ChessBoard) Test() {
 	cb.PrintChessBoard()
-	cb.GenerateMoves()
-	//PrintBitboard(pawnAttacks[Black][SquareToInt["a7"]])
+	var moveList []Move
+	cb.GenerateMoves(&moveList)
+	PrintMoveList(moveList[:])
 }
+
+///////////////////////////////////////////////////////////////////
+// Prints for debugging
+///////////////////////////////////////////////////////////////////
 
 func PrintBitboard(bitboard uint64) {
 	for rank := 8; rank >= 1; rank-- {
@@ -185,3 +204,22 @@ func PrintBitboardHex(bitboard uint64) {
 	fmt.Printf("%s\n", fmt.Sprintf("0x%X", bitboard))
 }
 */
+
+func PrintMove(move Move) {
+	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%9d\n", "",
+		IntToSquare[move.GetMoveStart()],
+		IntToSquare[move.GetMoveEnd()],
+		IntToPiece[move.GetMoveStartPiece()],
+		IntToPiece[move.GetMoveEndPiece()],
+		move.GetMoveFlags(),
+		move.Index)
+}
+func PrintMoveList(move []Move) {
+	fmt.Printf("\n%4s%-8s%-10s%-12s%04s%8s\n\n",
+		"", "Move", "Piece", "Captured", "Flags", "Index")
+	length := len(move)
+	for i := 0; i < length; i++ {
+		PrintMove(move[i])
+	}
+	fmt.Printf("\n")
+}

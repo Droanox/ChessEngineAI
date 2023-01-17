@@ -6,6 +6,10 @@ import (
 	"unicode"
 )
 
+///////////////////////////////////////////////////////////////////
+// General util
+///////////////////////////////////////////////////////////////////
+
 func setBit(bitboard *uint64, square int) {
 	*bitboard |= (1 << uint64(square))
 }
@@ -21,6 +25,10 @@ func popBit(bitboard *uint64, square int) {
 func isBitOn(bitboard uint64, square int) bool {
 	return bitboard == (bitboard | (1 << uint64(square)))
 }
+
+///////////////////////////////////////////////////////////////////
+// Move generation
+///////////////////////////////////////////////////////////////////
 
 // The "Brian Kernighan's way" of counting bits on a bitboard,
 // implementation idea from chess programming wiki
@@ -54,6 +62,29 @@ func BitScanReverse(bitboard uint64) int {
 	}
 	return -1
 }
+
+func (cb ChessBoard) GetPieceType(square int) int {
+	indexMask := indexMasks[square]
+	switch {
+	case (cb.WhitePawns|cb.BlackPawns)&indexMask != EmptyBoard:
+		return Pawn
+	case (cb.WhiteKnights|cb.BlackKnights)&indexMask != EmptyBoard:
+		return Knight
+	case (cb.WhiteBishops|cb.BlackBishops)&indexMask != EmptyBoard:
+		return Bishop
+	case (cb.WhiteRooks|cb.BlackRooks)&indexMask != EmptyBoard:
+		return Rook
+	case (cb.WhiteQueen|cb.BlackQueen)&indexMask != EmptyBoard:
+		return Queen
+	case (cb.WhiteKing|cb.BlackKing)&indexMask != EmptyBoard:
+		return King
+	}
+	return EmptyPiece
+}
+
+///////////////////////////////////////////////////////////////////
+// GUI
+///////////////////////////////////////////////////////////////////
 
 func (cb *ChessBoard) GetPiece(square int) string {
 	for _, p := range AllPieceNames {
@@ -96,12 +127,17 @@ func (cb *ChessBoard) GetPiecesBitboard(p string) uint64 {
 	return EmptyBoard
 }
 
-/* Was used but made redundant, code is kept if it's ever needed again
+// Was used but made redundant, code is kept if it's ever needed again
+/*
 func (cb ChessBoard) Type(num int) string {
 	b := reflect.TypeOf(cb)
 	return b.Field(num).Name
 }
 */
+
+///////////////////////////////////////////////////////////////////
+// Parse FEN
+///////////////////////////////////////////////////////////////////
 
 // Parses a fen string for example: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNN w KQkq - 0 1"
 // onto the chessboard and maps every pieces bitboard to the relevant pieces
