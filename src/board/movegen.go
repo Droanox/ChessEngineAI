@@ -45,6 +45,21 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 	return false
 }
 
+func (cb ChessBoard) CopyBoard() {
+	ChessBoardCopy = cb
+	AspectsCopy = [5]int{SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter}
+}
+
+func (cb *ChessBoard) MakeBoard() {
+	*cb = ChessBoardCopy
+
+	SideToMove = AspectsCopy[0]
+	CastleRights = AspectsCopy[1]
+	Enpassant = AspectsCopy[2]
+	HalfMoveClock = AspectsCopy[3]
+	FullMoveCounter = AspectsCopy[4]
+}
+
 ///////////////////////////////////////////////////////////////////
 // Encoding/Decoding
 ///////////////////////////////////////////////////////////////////
@@ -73,6 +88,71 @@ func AddMove(moveList *[]Move, move int) {
 }
 
 ///////////////////////////////////////////////////////////////////
+// Making moves
+///////////////////////////////////////////////////////////////////
+
+func (cb *ChessBoard) MakeMove(move Move, moveListType int) int {
+	cb.CopyBoard()
+
+	start := move.GetMoveStart()
+	end := move.GetMoveEnd()
+	startPiece := move.GetMoveStartPiece() + (6 * SideToMove)
+	CapturedPiece := move.GetMoveEndPiece() + (6 * (1 - SideToMove))
+	flags := move.GetMoveFlags()
+
+	pieceMap := map[int]*uint64{
+		1: &cb.WhitePawns, 2: &cb.WhiteKnights, 3: &cb.WhiteBishops, 4: &cb.WhiteRooks, 5: &cb.WhiteQueen, 6: &cb.WhiteKing,
+		7: &cb.BlackPawns, 8: &cb.BlackKnights, 9: &cb.BlackBishops, 10: &cb.BlackRooks, 11: &cb.BlackQueen, 12: &cb.BlackKing,
+	}
+
+	if moveListType == 0 {
+		cb.CopyBoard()
+
+		Enpassant = 64
+
+		*pieceMap[startPiece] ^= indexMasks[start]
+		setBit(pieceMap[startPiece], end)
+		if (flags & MoveCaptures) != 0 {
+			*pieceMap[CapturedPiece] ^= indexMasks[end]
+		}
+		if flags >= MoveKnightPromotion {
+			*pieceMap[startPiece] ^= indexMasks[end]
+			setBit(pieceMap[PromotionToPiece[flags]+(6*SideToMove)], end)
+		}
+		if flags == MoveEnpassantCapture {
+			*pieceMap[CapturedPiece] ^= indexMasks[end]
+			*pieceMap[CapturedPiece] ^= indexMasks[end+SideToOffset[SideToMove]]
+		}
+		if flags == MoveDoublePawn {
+			Enpassant = end + SideToOffset[SideToMove]
+		}
+		switch flags {
+		case MoveKingCastle:
+			*pieceMap[startPiece-2] ^= (indexMasks[end+1] | indexMasks[end-1])
+		case MoveQueenCastle:
+			*pieceMap[startPiece-2] ^= (indexMasks[end-2] | indexMasks[end+1])
+		}
+		CastleRights &= CastleRightsUpdate[start]
+		CastleRights &= CastleRightsUpdate[end]
+
+		cb.WhitePieces = cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
+		cb.BlackPieces = cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
+
+		SideToMove ^= 1
+
+		if cb.IsSquareAttackedBySide(BitScanForward(*pieceMap[6+(6*(1-SideToMove))]), SideToMove) {
+			cb.MakeBoard()
+			return 0
+		}
+		return 1
+
+	} else {
+
+	}
+	return 1
+}
+
+///////////////////////////////////////////////////////////////////
 // Move Generation
 ///////////////////////////////////////////////////////////////////
 
@@ -80,13 +160,14 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 	var start, end int
 	var attacks uint64
 	var allPieces uint64 = cb.WhitePieces | cb.BlackPieces
-	var knights, bishops, rooks, queen, otherSide, target uint64
+	var knights, bishops, rooks, queen, king, otherSide, target uint64
 
 	if SideToMove == White {
 		knights = cb.WhiteKnights
 		bishops = cb.WhiteBishops
 		rooks = cb.WhiteRooks
 		queen = cb.WhiteQueen
+		king = cb.WhiteKing
 		otherSide = cb.BlackPieces
 		target = ^cb.WhitePieces
 	} else {
@@ -94,6 +175,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 		bishops = cb.BlackBishops
 		rooks = cb.BlackRooks
 		queen = cb.BlackQueen
+		king = cb.BlackKing
 		otherSide = cb.WhitePieces
 		target = ^cb.BlackPieces
 	}
@@ -229,6 +311,122 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 				AddMove(moveList, EncodeMove(start, end, Queen, cb.GetPieceType(end), MoveCaptures))
 			} else {
 				AddMove(moveList, EncodeMove(start, end, Queen, EmptyPiece, MoveQuiet))
+			}
+		}
+	}
+	// Generate King moves
+	for bitboard := king; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := kingAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, King, cb.GetPieceType(end), MoveCaptures))
+			} else {
+				AddMove(moveList, EncodeMove(start, end, King, EmptyPiece, MoveQuiet))
+			}
+		}
+	}
+}
+
+func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
+	var start, end int
+	var attacks uint64
+	var allPieces uint64 = cb.WhitePieces | cb.BlackPieces
+	var knights, bishops, rooks, queen, otherSide, target uint64
+
+	if SideToMove == White {
+		knights = cb.WhiteKnights
+		bishops = cb.WhiteBishops
+		rooks = cb.WhiteRooks
+		queen = cb.WhiteQueen
+		otherSide = cb.BlackPieces
+		target = ^cb.WhitePieces
+	} else {
+		knights = cb.BlackKnights
+		bishops = cb.BlackBishops
+		rooks = cb.BlackRooks
+		queen = cb.BlackQueen
+		otherSide = cb.WhitePieces
+		target = ^cb.BlackPieces
+	}
+	// White pawns and White castling moves
+	if SideToMove == White {
+		for bitboard := cb.WhitePawns; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+			start = BitScanForward(bitboard)
+			for attacks := pawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
+				end = BitScanForward(attacks)
+				if start >= 48 && start <= 55 {
+					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
+				} else {
+					AddMove(moveList, EncodeMove(start, end, Pawn, cb.GetPieceType(end), MoveCaptures))
+				}
+				popBit(&attacks, end)
+			}
+			if Enpassant != -1 {
+				attacks = pawnAttacks[White][start] & (1 << Enpassant)
+				if attacks != EmptyBoard {
+					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
+				}
+			}
+		}
+		// Black pawn and Black castling moves
+	} else {
+		for bitboard := cb.BlackPawns; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+			start = BitScanForward(bitboard)
+			for attacks := pawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
+				end = BitScanForward(attacks)
+				if start >= 8 && start <= 15 {
+					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
+				} else {
+					AddMove(moveList, EncodeMove(start, end, Pawn, cb.GetPieceType(end), MoveCaptures))
+				}
+				popBit(&attacks, end)
+			}
+			if Enpassant != -1 {
+				attacks = pawnAttacks[Black][start] & (1 << Enpassant)
+				if attacks != EmptyBoard {
+					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
+				}
+			}
+		}
+	}
+	// Generate knight moves
+	for bitboard := knights; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := knightAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Knight, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate Bishop moves
+	for bitboard := bishops; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := GetBishopAttacks(start, allPieces) & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Bishop, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate Rook moves
+	for bitboard := rooks; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := GetRookAttacks(start, allPieces) & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Rook, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate Queen moves
+	for bitboard := queen; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := GetQueenAttacks(start, allPieces) & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Queen, cb.GetPieceType(end), MoveCaptures))
 			}
 		}
 	}

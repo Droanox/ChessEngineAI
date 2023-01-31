@@ -28,6 +28,11 @@ const (
 )
 
 const (
+	FileABOn uint64 = 0x303030303030303
+	FileGHOn uint64 = 0xc0c0c0c0c0c0c0c0
+)
+
+const (
 	White = 0b0
 	Black = 0b1
 )
@@ -50,6 +55,14 @@ var AllPieceNames = []string{
 	"BlackPawns", "BlackKnights", "BlackBishops", "BlackRooks", "BlackQueen", "BlackKing",
 }
 
+var SideToMoveMap = map[string]int{
+	"w": White, "b": Black,
+}
+var CastleMap = map[rune]int{
+	'K': WhiteKingSide, 'Q': WhiteQueenSide, 'k': BlackKingSide, 'q': BlackQueenSide,
+}
+
+// The standard starting position for a Chess Board in FEN notation
 const InitialPositionFen string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 var (
@@ -108,8 +121,35 @@ const (
 	MoveQueenPromotionCapture  = 0xF // 1111 0000 0000 0000 0000 0000
 )
 
+var (
+	ChessBoardCopy ChessBoard
+	AspectsCopy    [5]int
+)
+
 var IntToPiece = [7]string{
 	"Empty", "Pawn", "Knight", "Bishop", "Rook", "Queen", "King",
+}
+
+var PromotionToPiece = map[int]int{
+	MoveKnightPromotion: 2, MoveBishopPromotion: 3, MoveRookPromotion: 4, MoveQueenPromotion: 5,
+	MoveKnightPromotionCapture: 2, MoveBishopPromotionCapture: 3, MoveRookPromotionCapture: 4, MoveQueenPromotionCapture: 5,
+}
+
+var SideToOffset = map[int]int{
+	White: -8, Black: +8,
+}
+
+// Used to check if a moved piece affects the current castlerights var, if so,
+// update it accordingly
+var CastleRightsUpdate = [64]int{
+	7, 15, 15, 15, 3, 15, 15, 11,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	13, 15, 15, 15, 12, 15, 15, 14,
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -129,7 +169,7 @@ var index64 = [64]int{
 }
 
 // Used to change the square index to the x-y mapping of it
-var IntToSquare = [64]string{
+var IntToSquare = [65]string{
 	"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
 	"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
 	"a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
@@ -138,6 +178,7 @@ var IntToSquare = [64]string{
 	"a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
 	"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
 	"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+	"-",
 }
 
 // Used to change a x-y mapping of a chessboard to the squares index.
@@ -150,4 +191,5 @@ var SquareToInt = map[string]int{
 	"a6": 40, "b6": 41, "c6": 42, "d6": 43, "e6": 44, "f6": 45, "g6": 46, "h6": 47,
 	"a7": 48, "b7": 49, "c7": 50, "d7": 51, "e7": 52, "f7": 53, "g7": 54, "h7": 55,
 	"a8": 56, "b8": 57, "c8": 58, "d8": 59, "e8": 60, "f8": 61, "g8": 62, "h8": 63,
+	"-": 64,
 }

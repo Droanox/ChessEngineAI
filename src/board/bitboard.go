@@ -99,7 +99,7 @@ func (cb *ChessBoard) Init() {
 	// and output is used as a variable
 	// MagicInit()
 
-	cb.parseFen("1pbr2k1/P5p1/4p2p/5pb1/N7/1R6/3p1PPP/R1P3K1 w - - 4 29")
+	cb.parseFen("rnb1k2r/pp2Rpp1/4pq1p/2p5/BbBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9")
 	/*
 		Starting position:
 		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -116,6 +116,7 @@ func (cb *ChessBoard) Init() {
 		Enpassant tests:
 		rnbqkbnr/pp1p1ppp/8/2pPp3/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3 // white enpassant
 		rnbqkbnr/pppp1ppp/8/8/3PpPP1/8/PPP1P2P/RNBQKBNR b KQkq f3 0 3 // black enpassant
+		rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR b KQkq - 0 2 // black enpassant is set
 
 		Promotion tests:
 		1pbr2k1/P5p1/4p2p/5pb1/N7/1R6/3p1PPP/R1P3K1 w - - 4 29 // white capture promotion
@@ -124,10 +125,18 @@ func (cb *ChessBoard) Init() {
 }
 
 func (cb *ChessBoard) Test() {
-	cb.PrintChessBoard()
 	var moveList []Move
 	cb.GenerateMoves(&moveList)
-	PrintMoveList(moveList[:])
+	PrintMoveList(moveList)
+	for i := 0; i < len(moveList); i++ {
+		cb.CopyBoard()
+		if cb.MakeMove(moveList[i], 0) == 0 {
+			continue
+		}
+		cb.PrintChessBoard()
+
+		cb.MakeBoard()
+	}
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -142,7 +151,7 @@ func PrintBitboard(bitboard uint64) {
 			if ((bitboard >> square) & 1) != 0 {
 				fmt.Print("|X")
 			} else {
-				fmt.Print("|.")
+				fmt.Print("|·")
 			}
 		}
 		fmt.Print("|\n")
@@ -151,7 +160,15 @@ func PrintBitboard(bitboard uint64) {
 }
 
 func (cb ChessBoard) PrintChessBoard() {
-	PrintBitboard(cb.WhitePieces | cb.BlackPieces)
+	for rank := 8; rank >= 1; rank-- {
+		fmt.Print(rank)
+		for file := 1; file <= 8; file++ {
+			square := (rank-1)*8 + (file - 1)
+			fmt.Print(" ", cb.GetPieceAscii(square))
+		}
+		fmt.Print("\n")
+	}
+	fmt.Print("  a b c d e f g h\n")
 	if SideToMove == White {
 		fmt.Printf("\nSide to move: %s", "White")
 	} else {
@@ -160,15 +177,23 @@ func (cb ChessBoard) PrintChessBoard() {
 	fmt.Printf("\nCastling rights (KQkq): ")
 	if CastleRights&WhiteKingSide != 0 {
 		fmt.Printf("K")
+	} else {
+		fmt.Printf("-")
 	}
 	if CastleRights&WhiteQueenSide != 0 {
 		fmt.Printf("Q")
+	} else {
+		fmt.Printf("-")
 	}
 	if CastleRights&BlackKingSide != 0 {
 		fmt.Printf("k")
+	} else {
+		fmt.Printf("-")
 	}
 	if CastleRights&BlackQueenSide != 0 {
 		fmt.Printf("q")
+	} else {
+		fmt.Printf("-")
 	}
 	if Enpassant == -1 {
 		fmt.Printf("\nEnpassant: %s", "-")
@@ -180,7 +205,6 @@ func (cb ChessBoard) PrintChessBoard() {
 }
 
 // Used to test whether the function IsAttackedBySide() returns the correct output
-/*
 func (cb ChessBoard) PrintBitboardIsAttacked(side int) {
 	for rank := 8; rank >= 1; rank-- {
 		fmt.Print(rank)
@@ -196,14 +220,12 @@ func (cb ChessBoard) PrintBitboardIsAttacked(side int) {
 	}
 	fmt.Print("  a b c d e f g h\n")
 }
-*/
+
 // Used to print the hexadecimal bitboard representation,
 // which is used to get bit masks
-/*
 func PrintBitboardHex(bitboard uint64) {
 	fmt.Printf("%s\n", fmt.Sprintf("0x%X", bitboard))
 }
-*/
 
 func PrintMove(move Move) {
 	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%9d\n", "",
