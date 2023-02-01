@@ -122,8 +122,9 @@ const (
 )
 
 var (
-	ChessBoardCopy ChessBoard
-	AspectsCopy    [5]int
+	ChessBoardCopies [100]ChessBoard
+	AspectsCopies    [100][5]int
+	Ply              int = -1
 )
 
 var IntToPiece = [7]string{
@@ -141,6 +142,7 @@ var SideToOffset = map[int]int{
 
 // Used to check if a moved piece affects the current castlerights var, if so,
 // update it accordingly
+/*
 var CastleRightsUpdate = [64]int{
 	7, 15, 15, 15, 3, 15, 15, 11,
 	15, 15, 15, 15, 15, 15, 15, 15,
@@ -151,6 +153,23 @@ var CastleRightsUpdate = [64]int{
 	15, 15, 15, 15, 15, 15, 15, 15,
 	13, 15, 15, 15, 12, 15, 15, 14,
 }
+*/
+var CastleRightsUpdate = [64]int{
+	13, 15, 15, 15, 12, 15, 15, 14,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	7, 15, 15, 15, 3, 15, 15, 11,
+}
+
+///////////////////////////////////////////////////////////////////
+// Perft consts and vars
+///////////////////////////////////////////////////////////////////
+
+var nodes int64
 
 ///////////////////////////////////////////////////////////////////
 // General util consts and vars

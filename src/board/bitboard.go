@@ -1,6 +1,8 @@
 package board
 
-import "fmt"
+import (
+	"fmt"
+)
 
 //
 // The bitboard format:
@@ -86,7 +88,7 @@ func attackSliderInit(isBishop bool) {
 	}
 }
 
-func (cb *ChessBoard) Init() {
+func (cb *ChessBoard) Init(FEN string) {
 	// Below init is used to inisialse the pawn, knight, and king pieces
 	attackLeaperInit()
 
@@ -99,7 +101,7 @@ func (cb *ChessBoard) Init() {
 	// and output is used as a variable
 	// MagicInit()
 
-	cb.parseFen("rnb1k2r/pp2Rpp1/4pq1p/2p5/BbBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9")
+	cb.parseFen(FEN)
 	/*
 		Starting position:
 		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -125,18 +127,7 @@ func (cb *ChessBoard) Init() {
 }
 
 func (cb *ChessBoard) Test() {
-	var moveList []Move
-	cb.GenerateMoves(&moveList)
-	PrintMoveList(moveList)
-	for i := 0; i < len(moveList); i++ {
-		cb.CopyBoard()
-		if cb.MakeMove(moveList[i], 0) == 0 {
-			continue
-		}
-		cb.PrintChessBoard()
-
-		cb.MakeBoard()
-	}
+	MagicInit()
 }
 
 ///////////////////////////////////////////////////////////////////

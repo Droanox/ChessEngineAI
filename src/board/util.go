@@ -40,6 +40,8 @@ func BitCount(bitboard uint64) int {
 	return count
 }
 
+// Kim Walisch's proposed ones' decrement to compute
+// the least significant 1 bit used in BitScanForward()
 func BitScanForward(bitboard uint64) int {
 	const debruijn64 uint64 = 0x03f79d71b4cb0a89
 	if bitboard != 0 {
