@@ -127,7 +127,7 @@ func (cb *ChessBoard) Init(FEN string) {
 }
 
 func (cb *ChessBoard) Test() {
-	MagicInit()
+	MagicInit(1)
 }
 
 ///////////////////////////////////////////////////////////////////

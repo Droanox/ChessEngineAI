@@ -118,8 +118,7 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 		setBit(pieceMap[PromotionToPiece[flags]+(6*SideToMove)], end)
 	}
 	if flags == MoveEnpassantCapture {
-		*pieceMap[CapturedPiece] ^= indexMasks[end]
-		*pieceMap[CapturedPiece] ^= indexMasks[end+SideToOffset[SideToMove]]
+		*pieceMap[CapturedPiece] ^= indexMasks[end] | indexMasks[end+SideToOffset[SideToMove]]
 	}
 	if flags == MoveDoublePawn {
 		Enpassant = end + SideToOffset[SideToMove]
@@ -130,6 +129,7 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	case MoveQueenCastle:
 		*pieceMap[startPiece-2] ^= (indexMasks[end-2] | indexMasks[end+1])
 	}
+
 	CastleRights &= CastleRightsUpdate[start]
 	CastleRights &= CastleRightsUpdate[end]
 
