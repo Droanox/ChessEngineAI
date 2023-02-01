@@ -10,17 +10,18 @@ type Move struct {
 }
 
 func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
+	both := cb.WhitePieces | cb.BlackPieces
 	if side == White {
 		switch {
 		case (pawnAttacks[Black][square] & cb.WhitePawns) != EmptyBoard:
 			return true
 		case (knightAttacks[square] & cb.WhiteKnights) != EmptyBoard:
 			return true
-		case (GetBishopAttacks(square, cb.WhitePieces|cb.BlackPieces) & cb.WhiteBishops) != EmptyBoard:
+		case (GetBishopAttacks(square, both) & cb.WhiteBishops) != EmptyBoard:
 			return true
-		case (GetRookAttacks(square, cb.WhitePieces|cb.BlackPieces) & cb.WhiteRooks) != EmptyBoard:
+		case (GetRookAttacks(square, both) & cb.WhiteRooks) != EmptyBoard:
 			return true
-		case (GetQueenAttacks(square, cb.WhitePieces|cb.BlackPieces) & cb.WhiteQueen) != EmptyBoard:
+		case (GetQueenAttacks(square, both) & cb.WhiteQueen) != EmptyBoard:
 			return true
 		case (kingAttacks[square] & cb.WhiteKing) != EmptyBoard:
 			return true
@@ -31,11 +32,11 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 			return true
 		case (knightAttacks[square] & cb.BlackKnights) != EmptyBoard:
 			return true
-		case (GetBishopAttacks(square, cb.WhitePieces|cb.BlackPieces) & cb.BlackBishops) != EmptyBoard:
+		case (GetBishopAttacks(square, both) & cb.BlackBishops) != EmptyBoard:
 			return true
-		case (GetRookAttacks(square, cb.WhitePieces|cb.BlackPieces) & cb.BlackRooks) != EmptyBoard:
+		case (GetRookAttacks(square, both) & cb.BlackRooks) != EmptyBoard:
 			return true
-		case (GetQueenAttacks(square, cb.WhitePieces|cb.BlackPieces) & cb.BlackQueen) != EmptyBoard:
+		case (GetQueenAttacks(square, both) & cb.BlackQueen) != EmptyBoard:
 			return true
 		case (kingAttacks[square] & cb.BlackKing) != EmptyBoard:
 			return true
@@ -101,15 +102,14 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	CapturedPiece := move.GetMoveEndPiece() + (6 * (1 - SideToMove))
 	flags := move.GetMoveFlags()
 
-	pieceMap := map[int]*uint64{
+	pieceMap := []*uint64{
 		1: &cb.WhitePawns, 2: &cb.WhiteKnights, 3: &cb.WhiteBishops, 4: &cb.WhiteRooks, 5: &cb.WhiteQueen, 6: &cb.WhiteKing,
 		7: &cb.BlackPawns, 8: &cb.BlackKnights, 9: &cb.BlackBishops, 10: &cb.BlackRooks, 11: &cb.BlackQueen, 12: &cb.BlackKing,
 	}
 
 	Enpassant = 64
 
-	*pieceMap[startPiece] ^= indexMasks[start]
-	setBit(pieceMap[startPiece], end)
+	*pieceMap[startPiece] ^= indexMasks[start] | indexMasks[end]
 	if (flags & MoveCaptures) != 0 {
 		*pieceMap[CapturedPiece] ^= indexMasks[end]
 	}
@@ -136,7 +136,7 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	cb.WhitePieces = cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
 	cb.BlackPieces = cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
 
-	if cb.IsSquareAttackedBySide(BitScanForward(*pieceMap[6+(6*(SideToMove))]), 1-SideToMove) {
+	if cb.IsSquareAttackedBySide(BitScanForward(*pieceMap[6+(6*SideToMove)]), 1-SideToMove) {
 		cb.MakeBoard()
 		return false
 	}

@@ -31,7 +31,7 @@ func createBoard(cb board.ChessBoard) *fyne.Container {
 			if file%2 == rank%2 {
 				b.FillColor = color.RGBA{150, 75, 45, 255}
 			}
-			piece := canvas.NewImageFromResource(pieceFromPNG(cb.GetPiece((rank-1)*8 + (file - 1))))
+			piece := canvas.NewImageFromResource(pieceFromPNG(cb.GetPieceString((rank-1)*8 + (file - 1))))
 			piece.FillMode = canvas.ImageFillContain
 			grid.Add(container.NewMax(b, piece))
 		}

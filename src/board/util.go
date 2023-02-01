@@ -73,9 +73,9 @@ func (cb ChessBoard) GetPieceType(square int) int {
 // GUI
 ///////////////////////////////////////////////////////////////////
 
-func (cb *ChessBoard) GetPiece(square int) string {
+func (cb *ChessBoard) GetPieceString(square int) string {
 	for _, p := range AllPieceNames {
-		bitboard := cb.GetPiecesBitboard(p)
+		bitboard := cb.GetPiecesBitboardString(p)
 		if isBitOn(bitboard, square) {
 			return p
 		}
@@ -83,7 +83,7 @@ func (cb *ChessBoard) GetPiece(square int) string {
 	return "Empty"
 }
 
-func (cb *ChessBoard) GetPiecesBitboard(piece string) uint64 {
+func (cb *ChessBoard) GetPiecesBitboardString(piece string) uint64 {
 	pieceMap := map[string]uint64{
 		"WhitePawns": cb.WhitePawns, "WhiteKnights": cb.WhiteKnights, "WhiteBishops": cb.WhiteBishops,
 		"WhiteRooks": cb.WhiteRooks, "WhiteKing": cb.WhiteKing, "WhiteQueen": cb.WhiteQueen,
@@ -95,18 +95,24 @@ func (cb *ChessBoard) GetPiecesBitboard(piece string) uint64 {
 	return pieceMap[piece]
 }
 
-func (cb *ChessBoard) GetPieceAscii(square int) string {
-	pieceMap := map[string]string{
-		"WhitePawns": "♙", "WhiteKnights": "♘", "WhiteBishops": "♗",
-		"WhiteRooks": "♖", "WhiteKing": "♔", "WhiteQueen": "♕",
+func (cb *ChessBoard) GetPieceInt(square int) int {
+	for i := 0; i <= BlackQueen; i++ {
+		bitboard := cb.GetPiecesBitboardInt(i)
+		if isBitOn(bitboard, square) {
+			return i
+		}
+	}
+	return Empty
+}
 
-		"BlackPawns": "♟", "BlackKnights": "♞", "BlackBishops": "♝",
-		"BlackRooks": "♜", "BlackKing": "♚", "BlackQueen": "♛",
-
-		"Empty": "·",
+func (cb *ChessBoard) GetPiecesBitboardInt(piece int) uint64 {
+	pieceMap := []uint64{
+		0: EmptyBoard,
+		1: cb.WhitePawns, 2: cb.WhiteKnights, 3: cb.WhiteBishops, 4: cb.WhiteRooks, 5: cb.WhiteQueen, 6: cb.WhiteKing,
+		7: cb.BlackPawns, 8: cb.BlackKnights, 9: cb.BlackBishops, 10: cb.BlackRooks, 11: cb.BlackQueen, 12: cb.BlackKing,
 	}
 
-	return pieceMap[cb.GetPiece(square)]
+	return pieceMap[piece]
 }
 
 // Was used but made redundant, code is kept if it's ever needed again

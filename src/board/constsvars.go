@@ -124,7 +124,8 @@ const (
 var (
 	ChessBoardCopies [100]ChessBoard
 	AspectsCopies    [100][5]int
-	Ply              int = -1
+	// Ply is incremented after each coard copy, and decremented after each board make (paste)
+	Ply int = -1
 )
 
 var IntToPiece = [7]string{
@@ -142,18 +143,6 @@ var SideToOffset = map[int]int{
 
 // Used to check if a moved piece affects the current castlerights var, if so,
 // update it accordingly
-/*
-var CastleRightsUpdate = [64]int{
-	7, 15, 15, 15, 3, 15, 15, 11,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	13, 15, 15, 15, 12, 15, 15, 14,
-}
-*/
 var CastleRightsUpdate = [64]int{
 	13, 15, 15, 15, 12, 15, 15, 14,
 	15, 15, 15, 15, 15, 15, 15, 15,
@@ -211,4 +200,27 @@ var SquareToInt = map[string]int{
 	"a7": 48, "b7": 49, "c7": 50, "d7": 51, "e7": 52, "f7": 53, "g7": 54, "h7": 55,
 	"a8": 56, "b8": 57, "c8": 58, "d8": 59, "e8": 60, "f8": 61, "g8": 62, "h8": 63,
 	"-": 64,
+}
+
+const (
+	Empty int = iota
+	WhitePawns
+	WhiteKnights
+	WhiteBishops
+	WhiteRooks
+	WhiteKing
+	WhiteQueen
+
+	BlackPawns
+	BlackKnights
+	BlackBishops
+	BlackRooks
+	BlackKing
+	BlackQueen
+)
+
+var PieceToASCII = []string{
+	0: ".",
+	1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♔", 6: "♕",
+	7: "♟", 8: "♞", 9: "♝", 10: "♜", 11: "♚", 12: "♛",
 }

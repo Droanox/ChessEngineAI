@@ -155,7 +155,7 @@ func (cb ChessBoard) PrintChessBoard() {
 		fmt.Print(rank)
 		for file := 1; file <= 8; file++ {
 			square := (rank-1)*8 + (file - 1)
-			fmt.Print(" ", cb.GetPieceAscii(square))
+			fmt.Print(" ", PieceToASCII[cb.GetPieceInt(square)])
 		}
 		fmt.Print("\n")
 	}

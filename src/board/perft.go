@@ -6,7 +6,7 @@ import (
 )
 
 func (cb ChessBoard) PerftTest() {
-	depth := 5
+	depth := 6
 
 	start := time.Now()
 
