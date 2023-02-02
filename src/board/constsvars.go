@@ -137,7 +137,7 @@ var PromotionToPiece = map[int]int{
 	MoveKnightPromotionCapture: 2, MoveBishopPromotionCapture: 3, MoveRookPromotionCapture: 4, MoveQueenPromotionCapture: 5,
 }
 
-var SideToOffset = map[int]int{
+var SideToOffset = []int{
 	White: -8, Black: +8,
 }
 
@@ -160,6 +160,50 @@ var CastleRightsUpdate = [64]int{
 
 var nodes int64
 
+var perftTests = []struct {
+	Name  string
+	FEN   string
+	depth int
+	nodes int64
+}{
+	{
+		Name:  "Initial Postion",
+		FEN:   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+		depth: 6,
+		nodes: 119060324,
+	}, {
+		Name:  "Wiki Position 2",
+		FEN:   "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -",
+		depth: 5,
+		nodes: 193690690,
+	}, {
+		Name:  "Wiki Position 3",
+		FEN:   "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -",
+		depth: 6,
+		nodes: 11030083,
+	}, {
+		Name:  "Wiki Position 4.1",
+		FEN:   "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+		depth: 5,
+		nodes: 15833292,
+	}, {
+		Name:  "Wiki Position 4.2",
+		FEN:   "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1",
+		depth: 5,
+		nodes: 15833292,
+	}, {
+		Name:  "Wiki Position 5",
+		FEN:   "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
+		depth: 5,
+		nodes: 89941194,
+	}, {
+		Name:  "Wiki Position 6",
+		FEN:   "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
+		depth: 5,
+		nodes: 164075551,
+	},
+}
+
 ///////////////////////////////////////////////////////////////////
 // General util consts and vars
 ///////////////////////////////////////////////////////////////////
@@ -176,8 +220,30 @@ var index64 = [64]int{
 	13, 18, 8, 12, 7, 6, 5, 63,
 }
 
+var bishopBits = [64]int{
+	6, 5, 5, 5, 5, 5, 5, 6,
+	5, 5, 5, 5, 5, 5, 5, 5,
+	5, 5, 7, 7, 7, 7, 5, 5,
+	5, 5, 7, 9, 9, 7, 5, 5,
+	5, 5, 7, 9, 9, 7, 5, 5,
+	5, 5, 7, 7, 7, 7, 5, 5,
+	5, 5, 5, 5, 5, 5, 5, 5,
+	6, 5, 5, 5, 5, 5, 5, 6,
+}
+
+var rookBits = [64]int{
+	12, 11, 11, 11, 11, 11, 11, 12,
+	11, 10, 10, 10, 10, 10, 10, 11,
+	11, 10, 10, 10, 10, 10, 10, 11,
+	11, 10, 10, 10, 10, 10, 10, 11,
+	11, 10, 10, 10, 10, 10, 10, 11,
+	11, 10, 10, 10, 10, 10, 10, 11,
+	11, 10, 10, 10, 10, 10, 10, 11,
+	12, 11, 11, 11, 11, 11, 11, 12,
+}
+
 // Used to change the square index to the x-y mapping of it
-var IntToSquare = [65]string{
+var IndexToSquare = [65]string{
 	"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
 	"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
 	"a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
@@ -190,7 +256,7 @@ var IntToSquare = [65]string{
 }
 
 // Used to change a x-y mapping of a chessboard to the squares index.
-var SquareToInt = map[string]int{
+var SquareToIndex = map[string]int{
 	"a1": 0, "b1": 1, "c1": 2, "d1": 3, "e1": 4, "f1": 5, "g1": 6, "h1": 7,
 	"a2": 8, "b2": 9, "c2": 10, "d2": 11, "e2": 12, "f2": 13, "g2": 14, "h2": 15,
 	"a3": 16, "b3": 17, "c3": 18, "d3": 19, "e3": 20, "f3": 21, "g3": 22, "h3": 23,
@@ -229,7 +295,7 @@ var PieceToASCII = []string{
 // Magic number util consts and vars
 ///////////////////////////////////////////////////////////////////
 
-// Best magic number seed found so far: 3
+// Best magic number seed found so far: 15
 
 var rookMagicNumber = [64]uint64{
 	1188950372496965666, 1170936040556331072, 648531610290888704, 5044036049991417992, 1585284669612508168, 144119622663143696, 288230930773182480, 4755801481985165586,

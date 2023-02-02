@@ -162,7 +162,7 @@ func (cb *ChessBoard) parseFen(fen string) {
 		CastleRights += CastleMap[val]
 	}
 
-	Enpassant = SquareToInt[fenRep[3]]
+	Enpassant = SquareToIndex[fenRep[3]]
 
 	if len(fenRep) > 4 {
 		HalfMoveClock, _ = strconv.Atoi(fenRep[4])

@@ -92,42 +92,17 @@ func (cb *ChessBoard) Init(FEN string) {
 	// Below init is used to inisialse the pawn, knight, and king pieces
 	attackLeaperInit()
 
-	// Below init is used to initalise the bishop and rook attack tables
+	// Below inits are used to initalise the bishop and rook attack tables
 	attackSliderInit(true)
 	attackSliderInit(false)
 
-	// Below init is used to get the first iteration of magic number, It is
-	// a set that works, it may not be the best set, only need to do it once,
-	// and output is used as a variable
-	// MagicInit()
-
+	// The below fills the Chessboard struct with the FEN
 	cb.parseFen(FEN)
-	/*
-		Starting position:
-		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-		Random positions:
-		"rnb1k2r/pp3pp1/4pq1p/2p5/1bBPP3/2N2N2/PP3PPP/R2Q1RK1 b kq - 1 9"
-		"2br2k1/6p1/1p2p2p/5pb1/N2p4/PR6/1P3PPP/R5K1 b - - 4 29"
-
-		Castling tests:
-		r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1 // can castle
-		rN2k1Nr/8/8/8/8/8/8/RN2K1NR w KQkq - 0 1 // cant castle because attacked
-		r3k2r/8/8/4R3/4r3/8/8/R3K2R w KQkq - 0 1 // cant castle because blocked
-
-		Enpassant tests:
-		rnbqkbnr/pp1p1ppp/8/2pPp3/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3 // white enpassant
-		rnbqkbnr/pppp1ppp/8/8/3PpPP1/8/PPP1P2P/RNBQKBNR b KQkq f3 0 3 // black enpassant
-		rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR b KQkq - 0 2 // black enpassant is set
-
-		Promotion tests:
-		1pbr2k1/P5p1/4p2p/5pb1/N7/1R6/3p1PPP/R1P3K1 w - - 4 29 // white capture promotion
-		2br2k1/6p1/1p2p2p/5pb1/N7/PR6/3p1PPP/R1P3K1 b - - 4 29 // black capture promotion
-	*/
 }
 
 func (cb *ChessBoard) Test() {
-	MagicInit(1)
+	cb.perftDriver(5)
+	fmt.Println(nodes)
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -189,7 +164,7 @@ func (cb ChessBoard) PrintChessBoard() {
 	if Enpassant == -1 {
 		fmt.Printf("\nEnpassant: %s", "-")
 	} else {
-		fmt.Printf("\nEnpassant: %s", IntToSquare[Enpassant])
+		fmt.Printf("\nEnpassant: %s", IndexToSquare[Enpassant])
 	}
 	fmt.Printf("\nHalf move clock: %d", HalfMoveClock)
 	fmt.Printf("\nFull move counter: %d\n\n", FullMoveCounter)
@@ -220,8 +195,8 @@ func PrintBitboardHex(bitboard uint64) {
 
 func PrintMove(move Move) {
 	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%9d\n", "",
-		IntToSquare[move.GetMoveStart()],
-		IntToSquare[move.GetMoveEnd()],
+		IndexToSquare[move.GetMoveStart()],
+		IndexToSquare[move.GetMoveEnd()],
 		IntToPiece[move.GetMoveStartPiece()],
 		IntToPiece[move.GetMoveEndPiece()],
 		move.GetMoveFlags(),

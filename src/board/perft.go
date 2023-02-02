@@ -6,28 +6,37 @@ import (
 )
 
 func (cb ChessBoard) PerftTest() {
-	depth := 5
+	for _, test := range perftTests {
+		cb.CopyBoard()
 
-	start := time.Now()
-
-	var moveList = []Move{}
-	cb.GenerateMoves(&moveList)
-
-	for i := 0; i < len(moveList); i++ {
-		if !cb.MakeMove(moveList[i]) {
-			continue
+		cb.Init(test.FEN)
+		cb.perftDriver(test.depth)
+		fmt.Println(test.Name, "\nNodes searched:", nodes)
+		if nodes != test.nodes {
+			fmt.Println("ERROR!")
 		}
-		var cumNodes int64 = nodes
-		cb.perftDriver(depth - 1)
-		var oldNodes int64 = nodes - cumNodes
-		cb.MakeBoard()
-		fmt.Printf("%s%s:", IntToSquare[moveList[i].GetMoveStart()], IntToSquare[moveList[i].GetMoveEnd()])
-		fmt.Printf(" %d\n", oldNodes)
-	}
+		nodes = 0
 
-	elapsed := time.Since(start)
-	fmt.Println("\nNodes searched:", nodes)
-	fmt.Println("Time elapsed:", elapsed)
+		cb.MakeBoard()
+	}
+}
+
+func (cb ChessBoard) PerftTestTimer() {
+	for _, test := range perftTests {
+		start := time.Now()
+		cb.CopyBoard()
+
+		cb.Init(test.FEN)
+		cb.perftDriver(test.depth)
+		elapsed := time.Since(start)
+		fmt.Println(test.Name, "\nNodes searched:", nodes, "\nTime elapsed:", elapsed)
+		if nodes != test.nodes {
+			fmt.Println("ERROR!", nodes, "!=", test.nodes)
+		}
+		nodes = 0
+
+		cb.MakeBoard()
+	}
 }
 
 func (cb ChessBoard) perftDriver(depth int) {
@@ -54,7 +63,6 @@ func (cb ChessBoard) PerftTestFindMagic(start int, end int) {
 
 	for i := start; i < end; i++ {
 		MagicInitWithReturn(int64(i))
-		cb.CopyBoard()
 		cb.Init("3k4/1r4r1/2b2b2/8/8/2B2B2/8/R3K2R w - - 0 1")
 
 		depth := 5
@@ -84,7 +92,6 @@ func (cb ChessBoard) PerftTestFindMagic(start int, end int) {
 			fmt.Printf("New best Seed: %d New best Time: ", bestSeed)
 			fmt.Println(bestTime)
 		}
-		cb.MakeBoard()
 	}
 	fmt.Println("\nBest seed found: ", bestSeed, " With best time: ", bestTime)
 	MagicInit(int64(bestSeed))
