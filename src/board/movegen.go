@@ -46,19 +46,19 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 }
 
 func (oldBoard ChessBoard) CopyBoard() {
-	ChessBoardCopies[Ply+1] = oldBoard
-	AspectsCopies[Ply+1] = [5]int{SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter}
+	chessBoardCopies[Ply+1] = oldBoard
+	aspectsCopies[Ply+1] = [5]int{SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter}
 	Ply++
 }
 
 func (newBoard *ChessBoard) MakeBoard() {
-	*newBoard = ChessBoardCopies[Ply]
+	*newBoard = chessBoardCopies[Ply]
 
-	SideToMove = AspectsCopies[Ply][0]
-	CastleRights = AspectsCopies[Ply][1]
-	Enpassant = AspectsCopies[Ply][2]
-	HalfMoveClock = AspectsCopies[Ply][3]
-	FullMoveCounter = AspectsCopies[Ply][4]
+	SideToMove = aspectsCopies[Ply][0]
+	CastleRights = aspectsCopies[Ply][1]
+	Enpassant = aspectsCopies[Ply][2]
+	HalfMoveClock = aspectsCopies[Ply][3]
+	FullMoveCounter = aspectsCopies[Ply][4]
 	Ply--
 }
 
@@ -118,10 +118,10 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 		setBit(pieceMap[PromotionToPiece[flags]+(6*SideToMove)], end)
 	}
 	if flags == MoveEnpassantCapture {
-		*pieceMap[CapturedPiece] ^= indexMasks[end] | indexMasks[end+SideToOffset[SideToMove]]
+		*pieceMap[CapturedPiece] ^= indexMasks[end] | indexMasks[end+sideToOffset[SideToMove]]
 	}
 	if flags == MoveDoublePawn {
-		Enpassant = end + SideToOffset[SideToMove]
+		Enpassant = end + sideToOffset[SideToMove]
 	}
 	switch flags {
 	case MoveKingCastle:
@@ -130,16 +130,16 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 		*pieceMap[startPiece-2] ^= (indexMasks[end-2] | indexMasks[end+1])
 	}
 
-	cb.WhitePieces = cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
-	cb.BlackPieces = cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
+	cb.WhitePieces = cb.WhitePawns | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteRooks | cb.WhiteQueen | cb.WhiteKing
+	cb.BlackPieces = cb.BlackPawns | cb.BlackKnights | cb.BlackBishops | cb.BlackRooks | cb.BlackQueen | cb.BlackKing
 
 	if cb.IsSquareAttackedBySide(BitScanForward(*pieceMap[6+(6*SideToMove)]), 1-SideToMove) {
 		cb.MakeBoard()
 		return false
 	}
 
-	CastleRights &= CastleRightsUpdate[start]
-	CastleRights &= CastleRightsUpdate[end]
+	CastleRights &= castleRightsUpdate[start]
+	CastleRights &= castleRightsUpdate[end]
 	SideToMove = 1 - SideToMove
 
 	return true

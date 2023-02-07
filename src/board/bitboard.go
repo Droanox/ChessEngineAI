@@ -88,21 +88,13 @@ func attackSliderInit(isBishop bool) {
 	}
 }
 
-func (cb *ChessBoard) Init(FEN string) {
+func (cb *ChessBoard) Init() {
 	// Below init is used to inisialse the pawn, knight, and king pieces
 	attackLeaperInit()
 
 	// Below inits are used to initalise the bishop and rook attack tables
 	attackSliderInit(true)
 	attackSliderInit(false)
-
-	// The below fills the Chessboard struct with the FEN
-	cb.parseFen(FEN)
-}
-
-func (cb *ChessBoard) Test() {
-	cb.perftDriver(5)
-	fmt.Println(nodes)
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -130,7 +122,7 @@ func (cb ChessBoard) PrintChessBoard() {
 		fmt.Print(rank)
 		for file := 1; file <= 8; file++ {
 			square := (rank-1)*8 + (file - 1)
-			fmt.Print(" ", PieceToASCII[cb.GetPieceInt(square)])
+			fmt.Print(" ", pieceToASCII[cb.GetPieceInt(square)])
 		}
 		fmt.Print("\n")
 	}

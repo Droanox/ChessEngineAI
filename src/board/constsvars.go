@@ -122,8 +122,8 @@ const (
 )
 
 var (
-	ChessBoardCopies [100]ChessBoard
-	AspectsCopies    [100][5]int
+	chessBoardCopies [100]ChessBoard
+	aspectsCopies    [100][5]int
 	// Ply is incremented after each coard copy, and decremented after each board make (paste)
 	Ply int = -1
 )
@@ -133,17 +133,17 @@ var IntToPiece = [7]string{
 }
 
 var PromotionToPiece = map[int]int{
-	MoveKnightPromotion: 2, MoveBishopPromotion: 3, MoveRookPromotion: 4, MoveQueenPromotion: 5,
-	MoveKnightPromotionCapture: 2, MoveBishopPromotionCapture: 3, MoveRookPromotionCapture: 4, MoveQueenPromotionCapture: 5,
+	MoveKnightPromotion: Knight, MoveBishopPromotion: Bishop, MoveRookPromotion: Rook, MoveQueenPromotion: Queen,
+	MoveKnightPromotionCapture: Knight, MoveBishopPromotionCapture: Bishop, MoveRookPromotionCapture: Rook, MoveQueenPromotionCapture: Queen,
 }
 
-var SideToOffset = []int{
+var sideToOffset = []int{
 	White: -8, Black: +8,
 }
 
 // Used to check if a moved piece affects the current castlerights var, if so,
 // update it accordingly
-var CastleRightsUpdate = [64]int{
+var castleRightsUpdate = [64]int{
 	13, 15, 15, 15, 12, 15, 15, 14,
 	15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15,
@@ -160,6 +160,7 @@ var CastleRightsUpdate = [64]int{
 
 var nodes int64
 
+// Perft tests taken from Chess Programming wiki
 var perftTests = []struct {
 	Name  string
 	FEN   string
@@ -274,21 +275,21 @@ const (
 	WhiteKnights
 	WhiteBishops
 	WhiteRooks
-	WhiteKing
 	WhiteQueen
+	WhiteKing
 
 	BlackPawns
 	BlackKnights
 	BlackBishops
 	BlackRooks
-	BlackKing
 	BlackQueen
+	BlackKing
 )
 
-var PieceToASCII = []string{
+var pieceToASCII = []string{
 	0: ".",
-	1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♔", 6: "♕",
-	7: "♟", 8: "♞", 9: "♝", 10: "♜", 11: "♚", 12: "♛",
+	1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♕", 6: "♔",
+	7: "♟", 8: "♞", 9: "♝", 10: "♜", 11: "♛", 12: "♚",
 }
 
 ///////////////////////////////////////////////////////////////////

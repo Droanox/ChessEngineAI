@@ -6,10 +6,11 @@ import (
 )
 
 func (cb ChessBoard) PerftTest() {
+	cb.Init()
 	for _, test := range perftTests {
 		cb.CopyBoard()
 
-		cb.Init(test.FEN)
+		cb.ParseFen(test.FEN)
 		cb.perftDriver(test.depth)
 		fmt.Println(test.Name, "\nNodes searched:", nodes)
 		if nodes != test.nodes {
@@ -22,11 +23,12 @@ func (cb ChessBoard) PerftTest() {
 }
 
 func (cb ChessBoard) PerftTestTimer() {
+	cb.Init()
 	for _, test := range perftTests {
 		start := time.Now()
 		cb.CopyBoard()
 
-		cb.Init(test.FEN)
+		cb.ParseFen(test.FEN)
 		cb.perftDriver(test.depth)
 		elapsed := time.Since(start)
 		fmt.Println(test.Name, "\nNodes searched:", nodes, "\nTime elapsed:", elapsed)
@@ -37,6 +39,7 @@ func (cb ChessBoard) PerftTestTimer() {
 
 		cb.MakeBoard()
 	}
+	fmt.Println()
 }
 
 func (cb ChessBoard) perftDriver(depth int) {
@@ -60,10 +63,11 @@ func (cb ChessBoard) perftDriver(depth int) {
 func (cb ChessBoard) PerftTestFindMagic(start int, end int) {
 	bestSeed := -1
 	var bestTime time.Duration = 100000000000
+	cb.Init()
 
 	for i := start; i < end; i++ {
 		MagicInitWithReturn(int64(i))
-		cb.Init("3k4/1r4r1/2b2b2/8/8/2B2B2/8/R3K2R w - - 0 1")
+		cb.ParseFen("3k4/1r4r1/2b2b2/8/8/2B2B2/8/R3K2R w - - 0 1")
 
 		depth := 5
 

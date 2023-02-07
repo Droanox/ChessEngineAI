@@ -96,7 +96,7 @@ func (cb *ChessBoard) GetPiecesBitboardString(piece string) uint64 {
 }
 
 func (cb *ChessBoard) GetPieceInt(square int) int {
-	for i := 0; i <= BlackQueen; i++ {
+	for i := 0; i <= BlackKing; i++ {
 		bitboard := cb.GetPiecesBitboardInt(i)
 		if isBitOn(bitboard, square) {
 			return i
@@ -107,9 +107,12 @@ func (cb *ChessBoard) GetPieceInt(square int) int {
 
 func (cb *ChessBoard) GetPiecesBitboardInt(piece int) uint64 {
 	pieceMap := []uint64{
-		0: EmptyBoard,
-		1: cb.WhitePawns, 2: cb.WhiteKnights, 3: cb.WhiteBishops, 4: cb.WhiteRooks, 5: cb.WhiteQueen, 6: cb.WhiteKing,
-		7: cb.BlackPawns, 8: cb.BlackKnights, 9: cb.BlackBishops, 10: cb.BlackRooks, 11: cb.BlackQueen, 12: cb.BlackKing,
+		Empty:      EmptyBoard,
+		WhitePawns: cb.WhitePawns, WhiteKnights: cb.WhiteKnights, WhiteBishops: cb.WhiteBishops,
+		WhiteRooks: cb.WhiteRooks, WhiteQueen: cb.WhiteQueen, WhiteKing: cb.WhiteKing,
+
+		BlackPawns: cb.BlackPawns, BlackKnights: cb.BlackKnights, BlackBishops: cb.BlackBishops,
+		BlackRooks: cb.BlackRooks, BlackQueen: cb.BlackQueen, BlackKing: cb.BlackKing,
 	}
 
 	return pieceMap[piece]
@@ -130,8 +133,10 @@ func (cb ChessBoard) Type(num int) string {
 // Parses a fen string for example: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNN w KQkq - 0 1"
 // onto the chessboard and maps every pieces bitboard to the relevant pieces
 
-func (cb *ChessBoard) parseFen(fen string) {
-	fenRep := strings.Split(fen, " ")
+func (cb *ChessBoard) ParseFen(fen string) {
+	ChessBoard{}.CopyBoard()
+	cb.MakeBoard()
+	fenRep := strings.Fields(fen)
 	var file int
 	var rank = 7
 
@@ -153,8 +158,8 @@ func (cb *ChessBoard) parseFen(fen string) {
 		}
 	}
 
-	cb.WhitePieces = cb.WhiteRooks | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteQueen | cb.WhiteKing | cb.WhitePawns
-	cb.BlackPieces = cb.BlackRooks | cb.BlackKnights | cb.BlackBishops | cb.BlackQueen | cb.BlackKing | cb.BlackPawns
+	cb.WhitePieces = cb.WhitePawns | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteRooks | cb.WhiteQueen | cb.WhiteKing
+	cb.BlackPieces = cb.BlackPawns | cb.BlackKnights | cb.BlackBishops | cb.BlackRooks | cb.BlackQueen | cb.BlackKing
 
 	SideToMove = SideToMoveMap[fenRep[1]]
 
