@@ -7,11 +7,10 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-
-	"github.com/Droanox/ChessEngineAI/src/board"
+	. "github.com/Droanox/ChessEngineAI/src/board"
 )
 
-func Run(cb board.ChessBoard) {
+func Run(cb ChessBoard) {
 	app := app.New()
 	w := app.NewWindow("Chess")
 
@@ -22,7 +21,7 @@ func Run(cb board.ChessBoard) {
 	w.ShowAndRun()
 }
 
-func createBoard(cb board.ChessBoard) *fyne.Container {
+func createBoard(cb ChessBoard) *fyne.Container {
 	grid := container.NewGridWithColumns(8)
 
 	for rank := 8; rank >= 1; rank-- {

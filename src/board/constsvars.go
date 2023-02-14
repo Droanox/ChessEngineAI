@@ -137,7 +137,7 @@ var PromotionToPiece = map[int]int{
 	MoveKnightPromotionCapture: Knight, MoveBishopPromotionCapture: Bishop, MoveRookPromotionCapture: Rook, MoveQueenPromotionCapture: Queen,
 }
 
-var sideToOffset = []int{
+var offsetBySide = []int{
 	White: -8, Black: +8,
 }
 

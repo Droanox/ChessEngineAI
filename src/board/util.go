@@ -17,7 +17,7 @@ func getBit(bitboard uint64, square int) uint64 {
 	return bitboard & (1 << uint64(square))
 }
 
-func popBit(bitboard *uint64, square int) {
+func PopBit(bitboard *uint64, square int) {
 	*bitboard ^= getBit(*bitboard, square)
 }
 

@@ -161,7 +161,7 @@ func setMagicOccupancies(start int, end int, mask uint64) uint64 {
 	occupancy := uint64(0)
 	for i := 0; i < end; i++ {
 		square := BitScanForward(mask)
-		popBit(&mask, square)
+		PopBit(&mask, square)
 		if start&(1<<i) != 0 {
 			occupancy |= (1 << square)
 		}

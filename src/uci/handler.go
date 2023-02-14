@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
-	"github.com/Droanox/ChessEngineAI/src/engine"
+	"github.com/Droanox/ChessEngineAI/src/search"
 )
 
 func scan(commands string, cb *board.ChessBoard) {
@@ -19,13 +19,12 @@ func scan(commands string, cb *board.ChessBoard) {
 		handleIsready()
 	case "ucinewgame":
 		handleUcinewgame(cb)
-		//cb.PrintChessBoard()
+		cb.PrintChessBoard()
 	case "position":
 		handlePosition(commands, cb)
-		//cb.PrintChessBoard()
+		cb.PrintChessBoard()
 	case "go":
-		handleGo(commands)
-		//cb.PrintChessBoard()
+		handleGo(commands, cb)
 	default:
 		fmt.Println("invalid command")
 	}
@@ -71,8 +70,8 @@ func handlePosition(cmd string, cb *board.ChessBoard) {
 	}
 }
 
-func handleGo(cmd string) {
-	var depth int = 0
+func handleGo(cmd string, cb *board.ChessBoard) {
+	var depth int = 6
 
 	goCommands := strings.Fields(cmd)
 
@@ -80,7 +79,7 @@ func handleGo(cmd string) {
 		depth, _ = strconv.Atoi(goCommands[2])
 	}
 
-	engine.Search(depth)
+	search.Search(depth, cb)
 }
 
 func handleMakeMove(move string, cb *board.ChessBoard) bool {
@@ -113,6 +112,7 @@ func handleMakeMove(move string, cb *board.ChessBoard) bool {
 				continue
 			}
 			cb.MakeMove(moveList[i])
+			board.Ply = -1
 			return true
 		}
 	}

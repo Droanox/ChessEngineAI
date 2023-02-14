@@ -1,11 +1,28 @@
 package main
 
-import "github.com/Droanox/ChessEngineAI/src/uci"
+import (
+	"github.com/Droanox/ChessEngineAI/src/board"
+	"github.com/Droanox/ChessEngineAI/src/engine"
+	"github.com/Droanox/ChessEngineAI/src/search"
+	"github.com/Droanox/ChessEngineAI/src/uci"
+)
 
 // command to run to create the .exe
 // fyne package -os windows -icon ChessEngineAI.png
 func main() {
-	uci.Run()
+	cb := board.ChessBoard{}
+	cb.Init()
+	engine.Init(&cb)
+
+	debug := false
+
+	if debug {
+		cb.ParseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+		cb.PrintChessBoard()
+		search.Search(5, &cb)
+	} else {
+		uci.Run()
+	}
 }
 
 /*
