@@ -134,8 +134,8 @@ func (cb ChessBoard) Type(num int) string {
 // onto the chessboard and maps every pieces bitboard to the relevant pieces
 
 func (cb *ChessBoard) ParseFen(fen string) {
-	ChessBoard{}.CopyBoard()
-	cb.MakeBoard()
+	*cb = ChessBoard{}
+	SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter = 0, 0, -1, 0, 1
 	fenRep := strings.Fields(fen)
 	var file int
 	var rank = 7
