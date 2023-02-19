@@ -6,7 +6,7 @@ package board
 
 type Move struct {
 	Move  int
-	Index int
+	Score int
 }
 
 func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
@@ -66,8 +66,8 @@ func (newBoard *ChessBoard) MakeBoard() {
 // Encoding/Decoding
 ///////////////////////////////////////////////////////////////////
 
-func EncodeMove(start int, end int, startPiece int, endPiece int, flags int) int {
-	return start | end<<6 | startPiece<<12 | endPiece<<16 | flags<<20
+func EncodeMove(start int, end int, startPiece int, capturedPiece int, flags int) int {
+	return start | end<<6 | startPiece<<12 | capturedPiece<<16 | flags<<20
 }
 func (move Move) GetMoveStart() int {
 	return (move.Move & 0x3f)
@@ -78,7 +78,7 @@ func (move Move) GetMoveEnd() int {
 func (move Move) GetMoveStartPiece() int {
 	return (move.Move & 0xf000) >> 12
 }
-func (move Move) GetMoveEndPiece() int {
+func (move Move) GetMoveCapturedPiece() int {
 	return (move.Move & 0xf0000) >> 16
 }
 func (move Move) GetMoveFlags() int {
@@ -86,7 +86,7 @@ func (move Move) GetMoveFlags() int {
 }
 
 func AddMove(moveList *[]Move, move int) {
-	*moveList = append(*moveList, Move{Move: move, Index: len(*moveList)})
+	*moveList = append(*moveList, Move{Move: move})
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	start := move.GetMoveStart()
 	end := move.GetMoveEnd()
 	startPiece := move.GetMoveStartPiece() + (6 * SideToMove)
-	CapturedPiece := move.GetMoveEndPiece() + (6 * (1 - SideToMove))
+	CapturedPiece := move.GetMoveCapturedPiece() + (6 * (1 - SideToMove))
 	flags := move.GetMoveFlags()
 
 	pieceArr := []*uint64{
@@ -145,14 +145,52 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	return true
 }
 
+func (cb *ChessBoard) MakeCapture(move Move) bool {
+	cb.CopyBoard()
+
+	start := move.GetMoveStart()
+	end := move.GetMoveEnd()
+	startPiece := move.GetMoveStartPiece() + (6 * SideToMove)
+	CapturedPiece := move.GetMoveCapturedPiece() + (6 * (1 - SideToMove))
+	flags := move.GetMoveFlags()
+
+	pieceArr := []*uint64{
+		1: &cb.WhitePawns, 2: &cb.WhiteKnights, 3: &cb.WhiteBishops, 4: &cb.WhiteRooks, 5: &cb.WhiteQueen, 6: &cb.WhiteKing,
+		7: &cb.BlackPawns, 8: &cb.BlackKnights, 9: &cb.BlackBishops, 10: &cb.BlackRooks, 11: &cb.BlackQueen, 12: &cb.BlackKing,
+	}
+
+	Enpassant = 64
+
+	*pieceArr[startPiece] ^= indexMasks[start] | indexMasks[end]
+	*pieceArr[CapturedPiece] ^= indexMasks[end]
+	if flags >= MoveKnightPromotionCapture {
+		*pieceArr[startPiece] ^= indexMasks[end]
+		setBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
+	}
+	if flags == MoveEnpassantCapture {
+		*pieceArr[CapturedPiece] ^= indexMasks[end] | indexMasks[end+offsetBySide[SideToMove]]
+	}
+
+	cb.WhitePieces = cb.WhitePawns | cb.WhiteKnights | cb.WhiteBishops | cb.WhiteRooks | cb.WhiteQueen | cb.WhiteKing
+	cb.BlackPieces = cb.BlackPawns | cb.BlackKnights | cb.BlackBishops | cb.BlackRooks | cb.BlackQueen | cb.BlackKing
+
+	if cb.IsSquareAttackedBySide(BitScanForward(*pieceArr[6+(6*SideToMove)]), 1-SideToMove) {
+		cb.MakeBoard()
+		return false
+	}
+
+	SideToMove = 1 - SideToMove
+
+	return true
+}
+
 ///////////////////////////////////////////////////////////////////
 // Move Generation
 ///////////////////////////////////////////////////////////////////
 
 func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 	var start, end int
-	var attacks uint64
-	var knights, bishops, rooks, queen, king, otherSide, target uint64
+	var attacks, knights, bishops, rooks, queen, king, otherSide, target uint64
 	var allPieces uint64 = cb.WhitePieces | cb.BlackPieces
 
 	if SideToMove == White {
@@ -317,6 +355,122 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 				AddMove(moveList, EncodeMove(start, end, King, cb.GetPieceType(end), MoveCaptures))
 			} else {
 				AddMove(moveList, EncodeMove(start, end, King, EmptyPiece, MoveQuiet))
+			}
+		}
+	}
+}
+
+func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
+	var start, end int
+	var attacks, knights, bishops, rooks, queen, king, otherSide, target uint64
+	var allPieces uint64 = cb.WhitePieces | cb.BlackPieces
+
+	if SideToMove == White {
+		knights = cb.WhiteKnights
+		bishops = cb.WhiteBishops
+		rooks = cb.WhiteRooks
+		queen = cb.WhiteQueen
+		king = cb.WhiteKing
+		otherSide = cb.BlackPieces
+		target = ^cb.WhitePieces
+	} else {
+		knights = cb.BlackKnights
+		bishops = cb.BlackBishops
+		rooks = cb.BlackRooks
+		queen = cb.BlackQueen
+		king = cb.BlackKing
+		otherSide = cb.WhitePieces
+		target = ^cb.BlackPieces
+	}
+
+	// White pawn moves
+	if SideToMove == White {
+		for bitboard := cb.WhitePawns; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+			start = BitScanForward(bitboard)
+			for attacks := pawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
+				end = BitScanForward(attacks)
+				if (indexMasks[start] & Rank7On) != EmptyBoard {
+					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
+				} else {
+					AddMove(moveList, EncodeMove(start, end, Pawn, cb.GetPieceType(end), MoveCaptures))
+				}
+				PopBit(&attacks, end)
+			}
+			if Enpassant != -1 {
+				attacks = pawnAttacks[White][start] & (1 << Enpassant)
+				if attacks != EmptyBoard {
+					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
+				}
+			}
+		}
+		// Black pawn moves
+	} else {
+		for bitboard := cb.BlackPawns; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+			start = BitScanForward(bitboard)
+			for attacks := pawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
+				end = BitScanForward(attacks)
+				if (indexMasks[start] & Rank2On) != EmptyBoard {
+					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
+				} else {
+					AddMove(moveList, EncodeMove(start, end, Pawn, cb.GetPieceType(end), MoveCaptures))
+				}
+				PopBit(&attacks, end)
+			}
+			if Enpassant != -1 {
+				attacks = pawnAttacks[Black][start] & (1 << Enpassant)
+				if attacks != EmptyBoard {
+					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
+				}
+			}
+		}
+	}
+	// Generate knight moves
+	for bitboard := knights; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := knightAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Knight, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate Bishop moves
+	for bitboard := bishops; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := GetBishopAttacks(start, allPieces) & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Bishop, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate Rook moves
+	for bitboard := rooks; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := GetRookAttacks(start, allPieces) & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Rook, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate Queen moves
+	for bitboard := queen; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := GetQueenAttacks(start, allPieces) & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, Queen, cb.GetPieceType(end), MoveCaptures))
+			}
+		}
+	}
+	// Generate King moves
+	for bitboard := king; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+		start = BitScanForward(bitboard)
+		for attacks := kingAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+			end = BitScanForward(attacks)
+			if isBitOn(otherSide, end) {
+				AddMove(moveList, EncodeMove(start, end, King, cb.GetPieceType(end), MoveCaptures))
 			}
 		}
 	}
