@@ -38,7 +38,7 @@ const (
 )
 
 const EmptyBoard uint64 = 0x0000000000000000
-const UniverseBoard uint64 = 0xffffffffffffffff
+const FullBoard uint64 = 0xffffffffffffffff
 
 ///////////////////////////////////////////////////////////////////
 // FEN string consts and vars
@@ -121,9 +121,11 @@ const (
 	MoveQueenPromotionCapture  = 0xF // 1111 0000 0000 0000 0000 0000
 )
 
+const MaxPly int = 100
+
 var (
-	chessBoardCopies [100]ChessBoard
-	aspectsCopies    [100][5]int
+	chessBoardCopies [MaxPly]ChessBoard
+	aspectsCopies    [MaxPly][5]int
 	// Ply is incremented after each coard copy, and decremented after each board make (paste)
 	Ply int = -1
 )
