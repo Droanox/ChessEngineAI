@@ -186,20 +186,22 @@ func PrintBitboardHex(bitboard uint64) {
 }
 
 func PrintMove(move Move) {
-	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%9d\n", "",
+	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%5s%-4d", "",
 		IndexToSquare[move.GetMoveStart()],
 		IndexToSquare[move.GetMoveEnd()],
 		IntToPiece[move.GetMoveStartPiece()],
-		IntToPiece[move.GetMoveEndPiece()],
+		IntToPiece[move.GetMoveCapturedPiece()],
 		move.GetMoveFlags(),
-		move.Index)
+		"",
+		move.Score)
 }
 func PrintMoveList(move []Move) {
-	fmt.Printf("\n%4s%-8s%-10s%-12s%04s%8s\n\n",
-		"", "Move", "Piece", "Captured", "Flags", "Index")
+	fmt.Printf("\n%4s%-8s%-10s%-12s%04s%9s%8s\n\n",
+		"", "Move", "Piece", "Captured", "Flags", "Score", "Index")
 	length := len(move)
 	for i := 0; i < length; i++ {
 		PrintMove(move[i])
+		fmt.Printf("%9d\n", i)
 	}
 	fmt.Printf("\n")
 }
