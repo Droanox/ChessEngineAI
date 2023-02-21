@@ -9,6 +9,7 @@ import (
 )
 
 func Search(depth int, cb *board.ChessBoard) {
+	nodes = 0
 	var score int = negamax(math.MinInt32, math.MaxInt32, depth, cb)
 	fmt.Printf("info depth %d nodes %d score cp %d\n", depth, nodes, score)
 
