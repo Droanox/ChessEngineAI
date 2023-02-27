@@ -21,16 +21,48 @@ var MVV_LVA = [7][7]int{
 	{0, 65, 64, 63, 62, 61, 60},
 }
 
+// killerMoves is used to store the killer moves
+// The first index is the number of killers (2)
+// The second index is the ply
+// The value is the move
 var killerMoves = [2][board.MaxPly]board.Move{}
 
+// historyMoves is used to store the history of moves
+// The first index is the number of pieces (12)
+// The second index is the ply
+// The value is the move
 var historyMoves = [12][board.MaxPly]int{}
+
+///////////////////////////////////////////////////////////////////
+// Principal variation
+///////////////////////////////////////////////////////////////////
+
+// Principal variation length
+// The index is the ply
+// The value is the length of the principal variation
+var pvLength [board.MaxPly]int
+
+// Principal variation table
+// The first index is the ply
+// The second index is the length of the principal variation
+// The value is the move
+var pvTable [board.MaxPly][board.MaxPly]board.Move
+
+// pvFollowed is used to determine if the principal variation was followed
+// if true then the principal variation was followed
+// if false then the principal variation was not followed
+var pvFollowed bool
 
 ///////////////////////////////////////////////////////////////////
 // General util
 ///////////////////////////////////////////////////////////////////
 
+// moveOrderOffset is used to offset the move ordering score
 const moveOrderOffset = 1000 //math.MaxInt32 - 1024
 
+// nodes is the number of nodes searched
+// This is used to print the number of nodes searched
+// in the search info
+// This is reset every time a search is performed
+// and is incremented every time a node is searched
 var nodes int
-
-var bestMove board.Move
