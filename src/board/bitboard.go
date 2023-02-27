@@ -22,6 +22,8 @@ import (
 // (X) represents a square with a piece on it
 //
 
+// ChessBoard is the main data structure for the chess engine
+// Containing the bitboards for each piece and the current side to move
 type ChessBoard struct {
 	WhitePawns   uint64
 	WhiteKnights uint64
@@ -41,6 +43,7 @@ type ChessBoard struct {
 	BlackPieces uint64
 }
 
+// The following are used to initialise the attack tables
 var (
 	pawnAttacks   [2][64]uint64
 	knightAttacks [64]uint64
@@ -52,6 +55,7 @@ var (
 	indexMasks    [64]uint64
 )
 
+// The following are used to initialise the attack tables
 func attackLeaperInit() {
 	for i := 0; i < 64; i++ {
 		pawnAttacks[White][i] = maskPawnAttacks(White, i)
@@ -62,6 +66,7 @@ func attackLeaperInit() {
 	}
 }
 
+// The following are used to initialise the attack tables
 func attackSliderInit(isBishop bool) {
 	for square := 0; square < 64; square++ {
 		bishopMasks[square] = maskMagicBishopAttacks(square)
@@ -88,6 +93,7 @@ func attackSliderInit(isBishop bool) {
 	}
 }
 
+// The following are used to initialise the attack tables
 func (cb *ChessBoard) Init() {
 	// Below init is used to inisialse the pawn, knight, and king pieces
 	attackLeaperInit()
@@ -133,22 +139,22 @@ func (cb ChessBoard) PrintChessBoard() {
 		fmt.Printf("\nSide to move: %s", "Black")
 	}
 	fmt.Printf("\nCastling rights (KQkq): ")
-	if CastleRights&WhiteKingSide != 0 {
+	if CastleRights&whiteKingSide != 0 {
 		fmt.Printf("K")
 	} else {
 		fmt.Printf("-")
 	}
-	if CastleRights&WhiteQueenSide != 0 {
+	if CastleRights&whiteQueenSide != 0 {
 		fmt.Printf("Q")
 	} else {
 		fmt.Printf("-")
 	}
-	if CastleRights&BlackKingSide != 0 {
+	if CastleRights&blackKingSide != 0 {
 		fmt.Printf("k")
 	} else {
 		fmt.Printf("-")
 	}
-	if CastleRights&BlackQueenSide != 0 {
+	if CastleRights&blackQueenSide != 0 {
 		fmt.Printf("q")
 	} else {
 		fmt.Printf("-")
