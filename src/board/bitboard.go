@@ -107,6 +107,7 @@ func (cb *ChessBoard) Init() {
 // Prints for debugging
 ///////////////////////////////////////////////////////////////////
 
+// PrintBitboard prints the bitboard in a human readable format
 func PrintBitboard(bitboard uint64) {
 	for rank := 8; rank >= 1; rank-- {
 		fmt.Print(rank)
@@ -123,6 +124,9 @@ func PrintBitboard(bitboard uint64) {
 	fmt.Print("  a b c d e f g h\n")
 }
 
+// PrintChessBoard prints the chessboard in a human readable format
+// Containing pieces with the ASCII representation
+// and all the other ChessBoard Info
 func (cb ChessBoard) PrintChessBoard() {
 	for rank := 8; rank >= 1; rank-- {
 		fmt.Print(rank)
@@ -191,6 +195,7 @@ func PrintBitboardHex(bitboard uint64) {
 	fmt.Printf("%s\n", fmt.Sprintf("0x%X", bitboard))
 }
 
+// Used to print the move in a human readable format
 func PrintMove(move Move) {
 	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%5s%-4d", "",
 		IndexToSquare[move.GetMoveStart()],
@@ -201,6 +206,9 @@ func PrintMove(move Move) {
 		"",
 		move.Score)
 }
+
+// Used to print the move list in a human readable format
+// along with the index of the move in the move list
 func PrintMoveList(move []Move) {
 	fmt.Printf("\n%4s%-8s%-10s%-12s%04s%9s%8s\n\n",
 		"", "Move", "Piece", "Captured", "Flags", "Score", "Index")
