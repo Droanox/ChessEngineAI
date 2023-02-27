@@ -8,7 +8,7 @@ import (
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 	nodes++
 	var standPat int = engine.Eval(*cb)
-	// fail-hard
+	// fails high
 	if standPat >= beta {
 		return beta
 	}
@@ -31,7 +31,7 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 		var score int = -quiescence(-beta, -alpha, cb)
 		cb.MakeBoard()
 
-		// fail-hard
+		// fails high
 		if score >= beta {
 			return beta
 		}

@@ -7,6 +7,7 @@ import (
 func scorePV(movelist *[]board.Move) {
 	pvFollowed = false
 	moves := (*movelist)
+
 	for i := 0; i < len(moves); i++ {
 		if moves[i].Move == pvTable[0][board.Ply+1].Move {
 			moves[i].Score = moveOrderOffset + 100
@@ -17,6 +18,7 @@ func scorePV(movelist *[]board.Move) {
 
 func scoreMoves(movelist *[]board.Move) {
 	moves := (*movelist)
+
 	for i := 0; i < len(moves); i++ {
 		if moves[i].GetMoveCapturedPiece() != board.EmptyPiece {
 			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
