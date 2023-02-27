@@ -5,6 +5,16 @@ import (
 	"math/rand"
 )
 
+/*
+Functions for generating magic bitboards for sliding pieces.
+These functions are based on the following resources:
+https://www.chessprogramming.org/Magic_Bitboards
+https://www.youtube.com/watch?v=KqWeOVyOoyU
+https://www.youtube.com/watch?v=UnEu5GOiSEs
+https://www.youtube.com/watch?v=1lAM8ffBg0A
+*/
+
+// maskMagicBishopAttacks returns a bitboard of the squares attacked by a bishop
 func maskMagicBishopAttacks(square int) uint64 {
 	var attacks uint64
 	targetRank := square / 8
@@ -26,6 +36,7 @@ func maskMagicBishopAttacks(square int) uint64 {
 	return attacks
 }
 
+// maskMagicRookAttacks returns a bitboard of the squares attacked by a rook
 func maskMagicRookAttacks(square int) uint64 {
 	var attacks uint64
 	targetRank := square / 8
@@ -47,6 +58,7 @@ func maskMagicRookAttacks(square int) uint64 {
 	return attacks
 }
 
+// maskBishopAttacks returns a bitboard of the squares attacked by a bishop
 func maskBishopAttacks(square int, blockers uint64) uint64 {
 	var attacks uint64
 	targetRank := square / 8
@@ -80,6 +92,7 @@ func maskBishopAttacks(square int, blockers uint64) uint64 {
 	return attacks
 }
 
+// maskRookAttacks returns a bitboard of the squares attacked by a rook
 func maskRookAttacks(square int, blockers uint64) uint64 {
 	var attacks uint64
 	targetRank := square / 8
@@ -215,6 +228,7 @@ func findMagic(square int, bits int, isBishop bool) uint64 {
 	return uint64(0)
 }
 
+// MagicInit is a function that prints out the magic numbers for rooks and bishops
 func MagicInit(seed int64) {
 	rand.Seed(seed)
 	fmt.Printf("var rookMagicNumber = [64]uint64{\n")
@@ -236,6 +250,8 @@ func MagicInit(seed int64) {
 	fmt.Printf("}")
 }
 
+// MagicInitWithReturn is the same as MagicInit but returns the magic numbers instead of printing them
+// used to generate possibly better magics by comparing operation times
 func MagicInitWithReturn(seed int64) {
 	rand.Seed(seed)
 	for square := 0; square < 64; square++ {

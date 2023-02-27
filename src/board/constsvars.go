@@ -3,8 +3,11 @@ package board
 ///////////////////////////////////////////////////////////////////
 // Masks
 ///////////////////////////////////////////////////////////////////
+
 // Hexadecimal values for constants taken from
 // chess programming wiki square mapping considerations
+
+// File masks
 const (
 	FileAOn uint64 = 0x0101010101010101 << iota
 	FileBOn
@@ -16,6 +19,7 @@ const (
 	FileHOn
 )
 
+// Rank masks
 const (
 	Rank1On uint64 = 0x00000000000000FF << (8 * iota)
 	Rank2On
@@ -27,39 +31,50 @@ const (
 	Rank8On
 )
 
+// File masks used by the knight
 const (
 	FileABOn uint64 = 0x303030303030303
 	FileGHOn uint64 = 0xc0c0c0c0c0c0c0c0
 )
 
+// Side consts
 const (
-	White = 0b0
-	Black = 0b1
+	White = 0
+	Black = 1
 )
 
+// EmptyBoard const is a bitboard with all 0's
 const EmptyBoard uint64 = 0x0000000000000000
+
+// FullBoard const is a bitboard with all 1's
 const FullBoard uint64 = 0xffffffffffffffff
 
 ///////////////////////////////////////////////////////////////////
 // FEN string consts and vars
 ///////////////////////////////////////////////////////////////////
+
+// Castle rights consts
 const (
-	WhiteKingSide  = 0b0001
-	WhiteQueenSide = 0b0010
-	BlackKingSide  = 0b0100
-	BlackQueenSide = 0b1000
+	whiteKingSide  = 0b0001
+	whiteQueenSide = 0b0010
+	blackKingSide  = 0b0100
+	blackQueenSide = 0b1000
 )
 
+// ALlPieceNames is used by GetPiecesBitboardString() to get the piece name from a square
 var AllPieceNames = []string{
 	"WhitePawns", "WhiteKnights", "WhiteBishops", "WhiteRooks", "WhiteQueen", "WhiteKing",
 	"BlackPawns", "BlackKnights", "BlackBishops", "BlackRooks", "BlackQueen", "BlackKing",
 }
 
-var SideToMoveMap = map[string]int{
+// sideToMoveMap is a map of the FEN side to move to the internal side to move
+var sideToMoveMap = map[string]int{
 	"w": White, "b": Black,
 }
-var CastleMap = map[rune]int{
-	'K': WhiteKingSide, 'Q': WhiteQueenSide, 'k': BlackKingSide, 'q': BlackQueenSide,
+
+// castleRightsMap is a map of the FEN castle rights to the internal castle rights
+var castleMap = map[rune]int{
+	'K': whiteKingSide, 'Q': whiteQueenSide, 'k': blackKingSide, 'q': blackQueenSide,
 }
 
 // The standard starting position for a Chess Board in FEN notation
@@ -90,6 +105,7 @@ var (
 // Movegen consts and vars
 ///////////////////////////////////////////////////////////////////
 
+// Piece values
 const (
 	EmptyPiece = 0x0 // 0000 0000 0000 0000 0000 0000
 	Pawn       = 0x1 // 0000 0000 0001 0000 0000 0000
@@ -100,6 +116,7 @@ const (
 	King       = 0x6 // 0000 0000 0110 0000 0000 0000
 )
 
+// Values that represent the encoding for the move type
 const (
 	/*
 		MoveStart                  = 0x3f   //  0000 0000 0000 0000 0011 1111
@@ -121,8 +138,12 @@ const (
 	MoveQueenPromotionCapture  = 0xF // 1111 0000 0000 0000 0000 0000
 )
 
+// MaxPly is the maximum number of plys that can be made in a game
+// A ply is a move made by a player
 const MaxPly int = 100
 
+// chessBoardCopies and aspectscopies are arrays
+// that are used to store the state of the board
 var (
 	chessBoardCopies [MaxPly]ChessBoard
 	aspectsCopies    [MaxPly][5]int
@@ -130,15 +151,19 @@ var (
 	Ply int = -1
 )
 
+// IntToPiece is a map of the internal piece value to the string representation
 var IntToPiece = [7]string{
 	"Empty", "Pawn", "Knight", "Bishop", "Rook", "Queen", "King",
 }
 
+// PromotionToPiece is a map of the internal promotion value to the piece value
 var PromotionToPiece = map[int]int{
 	MoveKnightPromotion: Knight, MoveBishopPromotion: Bishop, MoveRookPromotion: Rook, MoveQueenPromotion: Queen,
 	MoveKnightPromotionCapture: Knight, MoveBishopPromotionCapture: Bishop, MoveRookPromotionCapture: Rook, MoveQueenPromotionCapture: Queen,
 }
 
+// offsetByPiece is a map of the internal piece value to the offset value
+// Used to remove the need for a switch statement in the movegen function
 var offsetBySide = []int{
 	White: -8, Black: +8,
 }
@@ -160,9 +185,11 @@ var castleRightsUpdate = [64]int{
 // Perft consts and vars
 ///////////////////////////////////////////////////////////////////
 
+// nodes is the number of nodes visited in the perft test
 var nodes int64
 
 // Perft tests taken from Chess Programming wiki
+// https://www.chessprogramming.org/Perft_Results
 var perftTests = []struct {
 	Name  string
 	FEN   string
@@ -210,6 +237,7 @@ var perftTests = []struct {
 ///////////////////////////////////////////////////////////////////
 // General util consts and vars
 ///////////////////////////////////////////////////////////////////
+
 // Kim Walisch's proposed ones' decrement to compute
 // the least significant 1 bit used in BitScanForward()
 var index64 = [64]int{
@@ -223,6 +251,7 @@ var index64 = [64]int{
 	13, 18, 8, 12, 7, 6, 5, 63,
 }
 
+// bishopBits used for the magic bitboards
 var bishopBits = [64]int{
 	6, 5, 5, 5, 5, 5, 5, 6,
 	5, 5, 5, 5, 5, 5, 5, 5,
@@ -234,6 +263,7 @@ var bishopBits = [64]int{
 	6, 5, 5, 5, 5, 5, 5, 6,
 }
 
+// rookBits used for the magic bitboards
 var rookBits = [64]int{
 	12, 11, 11, 11, 11, 11, 11, 12,
 	11, 10, 10, 10, 10, 10, 10, 11,
@@ -245,7 +275,7 @@ var rookBits = [64]int{
 	12, 11, 11, 11, 11, 11, 11, 12,
 }
 
-// Used to change the square index to the x-y mapping of it
+// Used to change the index of a square to a string
 var IndexToSquare = [65]string{
 	"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
 	"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -258,7 +288,7 @@ var IndexToSquare = [65]string{
 	"-",
 }
 
-// Used to change a x-y mapping of a chessboard to the squares index.
+// Used to change a square string to an index
 var SquareToIndex = map[string]int{
 	"a1": 0, "b1": 1, "c1": 2, "d1": 3, "e1": 4, "f1": 5, "g1": 6, "h1": 7,
 	"a2": 8, "b2": 9, "c2": 10, "d2": 11, "e2": 12, "f2": 13, "g2": 14, "h2": 15,
@@ -271,6 +301,7 @@ var SquareToIndex = map[string]int{
 	"-": 64,
 }
 
+// conts for the pieces
 const (
 	Empty int = iota
 	WhitePawns
@@ -288,6 +319,7 @@ const (
 	BlackKing
 )
 
+// PieceToASCII is used to change a piece to ASCII representation
 var pieceToASCII = []string{
 	0: ".",
 	1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♕", 6: "♔",
@@ -300,6 +332,7 @@ var pieceToASCII = []string{
 
 // Best magic number seed found so far: 15
 
+// Rook magic numbers
 var rookMagicNumber = [64]uint64{
 	1188950372496965666, 1170936040556331072, 648531610290888704, 5044036049991417992, 1585284669612508168, 144119622663143696, 288230930773182480, 4755801481985165586,
 	1189372515164895872, 38421471764152448, 2308235615243608064, 563027264932928, 2523423187686918144, 2306405976615550984, 10674376643465838596, 2378463558642205193,
@@ -311,6 +344,7 @@ var rookMagicNumber = [64]uint64{
 	9259436301730480146, 288270242340208770, 158468220749954, 576470648445210625, 9252927201503881217, 577023708837982210, 2449994484127629860, 146649567232000386,
 }
 
+// Bishop magic numbers
 var bishopMagicNumber = [64]uint64{
 	290517652400111648, 9802093389561212928, 1162511462273384448, 2287534547664898, 1157574778073124912, 9296012381182246928, 324823291398225922, 142940817081408,
 	869212328892566024, 176207737830834704, 18159130125313, 19144713785626624, 2387193693246333216, 9016143256748354, 4684317566393518786, 2522015937390075904,

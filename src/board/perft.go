@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// PerftTest runs a series of perft tests to verify that the move generation is working correctly
 func (cb ChessBoard) PerftTest() {
 	cb.Init()
 	for _, test := range perftTests {
@@ -22,6 +23,7 @@ func (cb ChessBoard) PerftTest() {
 	}
 }
 
+// PerftTestTimer is similar to PerftTest but also prints the time it took to run the test
 func (cb ChessBoard) PerftTestTimer() {
 	cb.Init()
 	for _, test := range perftTests {
@@ -42,6 +44,7 @@ func (cb ChessBoard) PerftTestTimer() {
 	fmt.Println()
 }
 
+// PerftDriver is a recursive function that counts the number of nodes at a given depth
 func (cb ChessBoard) perftDriver(depth int) {
 	if depth == 0 {
 		nodes++
@@ -60,6 +63,9 @@ func (cb ChessBoard) perftDriver(depth int) {
 	}
 }
 
+// PerftTestFindMagic is a function that finds the best seed for the magic bitboards
+// It is not used in the program, but it is useful for finding the best seed
+// Not fully accurate, but it is a good starting point
 func (cb ChessBoard) PerftTestFindMagic(start int, end int) {
 	bestSeed := -1
 	var bestTime time.Duration = 100000000000
