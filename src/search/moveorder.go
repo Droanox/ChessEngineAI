@@ -4,6 +4,17 @@ import (
 	"github.com/Droanox/ChessEngineAI/src/board"
 )
 
+func scorePV(movelist *[]board.Move) {
+	pvFollowed = false
+	moves := (*movelist)
+	for i := 0; i < len(moves); i++ {
+		if moves[i].Move == pvTable[0][board.Ply+1].Move {
+			moves[i].Score = moveOrderOffset + 100
+			pvFollowed = true
+		}
+	}
+}
+
 func scoreMoves(movelist *[]board.Move) {
 	moves := (*movelist)
 	for i := 0; i < len(moves); i++ {
