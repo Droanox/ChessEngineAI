@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
 	"github.com/Droanox/ChessEngineAI/src/search"
@@ -70,16 +71,35 @@ func handlePosition(cmd string, cb *board.ChessBoard) {
 	}
 }
 
-func handleGo(cmd string, cb *board.ChessBoard) {
-	var depth int = 7
+func handleGo(cmd string, cb *board.ChessBoard) (err error) {
+	var wtime, btime string
+	var timeLeft time.Duration
 
+	depth := 100
 	goCommands := strings.Fields(cmd)
 
-	if strings.ToLower(goCommands[1]) == "depth" {
-		depth, _ = strconv.Atoi(goCommands[2])
+	if len(goCommands) > 1 {
+		for i, command := range goCommands {
+			switch command {
+			case "depth":
+				depth, err = strconv.Atoi(goCommands[i+1])
+			case "wtime":
+				wtime = goCommands[i+1]
+				if board.SideToMove == board.White {
+					timeLeft, err = time.ParseDuration(wtime + "ms")
+				}
+			case "btime":
+				btime = goCommands[i+1]
+				if board.SideToMove == board.Black {
+					timeLeft, err = time.ParseDuration(btime + "ms")
+				}
+			}
+		}
 	}
 
-	search.Search(depth, cb)
+	search.Search(depth, timeLeft, cb)
+
+	return err
 }
 
 func handleMakeMove(move string, cb *board.ChessBoard) bool {
