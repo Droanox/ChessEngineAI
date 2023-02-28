@@ -40,7 +40,7 @@ func Search(depth int, timeLeft time.Duration, cb *board.ChessBoard) {
 			PrintMove(pvTable[0][i])
 			fmt.Print(" ")
 		}
-		if elapsed.Milliseconds() > timeLeft.Milliseconds()/40 {
+		if elapsed.Milliseconds() > timeLeft.Milliseconds()/60 {
 			fmt.Println()
 			break
 		}
