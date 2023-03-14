@@ -29,7 +29,7 @@ func Search(depth int, timeLeft time.Duration, cb *board.ChessBoard) {
 		pvFollowed = true
 
 		// perform negamax search
-		var score int = negamax(math.MinInt32, math.MaxInt32, currDepth, cb)
+		var score int = alphabeta(math.MinInt32, math.MaxInt32, currDepth, cb)
 
 		//stop timer
 		elapsed := time.Since(start)

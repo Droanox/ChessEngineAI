@@ -2,7 +2,7 @@ package search
 
 import (
 	"github.com/Droanox/ChessEngineAI/src/board"
-	"github.com/Droanox/ChessEngineAI/src/engine"
+	engine "github.com/Droanox/ChessEngineAI/src/eval"
 )
 
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {

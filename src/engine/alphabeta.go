@@ -4,10 +4,9 @@ import (
 	"math"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
-	"github.com/Droanox/ChessEngineAI/src/engine"
 )
 
-func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
+func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// pvLength[board.Ply+1] is used to store the length of the principal variation
 	pvLength[board.Ply+1] = board.Ply + 1
 
@@ -18,9 +17,6 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 	// If the maximum ply is reached, we evaluate the position and return the score
 	// instead of searching further as it'll break the search
-	if board.Ply > board.MaxPly {
-		return engine.Eval(*cb)
-	}
 
 	nodes++
 
@@ -48,13 +44,13 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// otherwise, we score all the moves
 	if pvFollowed {
 		scorePV(&moveList)
-	} else {
-		scoreMoves(&moveList)
 	}
+	scoreMoves(&moveList)
 
 	// movesSearched is used to count the number of moves searched
 	var movesSearched int
 
+	// search through the moves
 	for i := 0; i < len(moveList); i++ {
 		pickMove(&moveList, i)
 
@@ -73,22 +69,22 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		// https://www.chessprogramming.org/Late_Move_Reductions
 		// full depth search
 		if movesSearched == 0 {
-			score = -negamax(-beta, -alpha, depth-1, cb)
+			score = -alphabeta(-beta, -alpha, depth-1, cb)
 			// LMR
 		} else {
 			// if the move satisfies the LMR conditions, we search deeper
 			if (movesSearched >= fullDepthMoves) && (depth >= reductionLimit) && ((moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0) {
-				score = -negamax(-alpha-1, -alpha, depth-2, cb)
+				score = -alphabeta(-alpha-1, -alpha, depth-2, cb)
 			} else {
 				score = alpha + 1
 			}
 			// if the move fails high, we search deeper
 			// principal variation search (PVS)
 			if score > alpha {
-				score = -negamax(-alpha-1, -alpha, depth-1, cb)
+				score = -alphabeta(-alpha-1, -alpha, depth-1, cb)
 				// if the move fails high, we search deeper again to confirm the move is good and not a fluke
 				if (score > alpha) && (score < beta) {
-					score = -negamax(-beta, -alpha, depth-1, cb)
+					score = -alphabeta(-beta, -alpha, depth-1, cb)
 				}
 			}
 		}
