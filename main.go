@@ -1,9 +1,11 @@
 package main
 
 import (
+	"time"
+
 	"github.com/Droanox/ChessEngineAI/src/board"
-	"github.com/Droanox/ChessEngineAI/src/engine"
-	"github.com/Droanox/ChessEngineAI/src/search"
+	engine "github.com/Droanox/ChessEngineAI/src/engine"
+	eval "github.com/Droanox/ChessEngineAI/src/eval"
 	"github.com/Droanox/ChessEngineAI/src/uci"
 )
 
@@ -12,14 +14,15 @@ import (
 func main() {
 	cb := board.ChessBoard{}
 	cb.Init()
-	engine.Init(&cb)
+	eval.Init(&cb)
 
-	debug := false
+	debug := true
 
 	if debug {
-		cb.ParseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+		cb.ParseFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
 		cb.PrintChessBoard()
-		search.Search(5, &cb)
+		timer, _ := time.ParseDuration("20000" + "ms")
+		engine.Search(10, timer, &cb)
 	} else {
 		uci.Run()
 	}

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
-	"github.com/Droanox/ChessEngineAI/src/search"
+	engine "github.com/Droanox/ChessEngineAI/src/engine"
 )
 
 func scan(commands string, cb *board.ChessBoard) {
@@ -97,7 +97,7 @@ func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 		}
 	}
 
-	search.Search(depth, timeLeft, cb)
+	engine.Search(depth, timeLeft, cb)
 
 	return err
 }
