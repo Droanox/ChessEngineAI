@@ -1,9 +1,10 @@
-package search
+package engine
 
 import (
 	"math"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
+	"github.com/Droanox/ChessEngineAI/src/eval"
 )
 
 func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
@@ -44,7 +45,7 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 	// Null Move Pruning (NMP)
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if (depth >= nullMoveDepth) && !isChecked && board.Ply > 0 {
+	if (depth >= nullMoveDepth) && (!isChecked) && (board.Ply > 0) && !eval.IsEndGame(*cb) {
 		cb.MakeMoveNull()
 		var score int = -alphabeta(-beta, -beta+1, depth-nullMoveReduction, cb)
 		cb.MakeBoard()

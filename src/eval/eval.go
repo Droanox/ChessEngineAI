@@ -1,4 +1,4 @@
-package engine
+package eval
 
 import (
 	"github.com/Droanox/ChessEngineAI/src/board"
@@ -58,4 +58,11 @@ func Eval(cb board.ChessBoard) int {
 	}
 	var phaseEG int = 24 - phaseMG
 	return ((scoreMG * phaseMG) + (scoreEG * phaseEG)) / 24
+}
+
+func IsEndGame(cb board.ChessBoard) bool {
+	if cb.WhitePieces < 24 || cb.BlackPieces < 24 {
+		return true
+	}
+	return false
 }

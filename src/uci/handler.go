@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
-	engine "github.com/Droanox/ChessEngineAI/src/engine"
+	"github.com/Droanox/ChessEngineAI/src/engine"
 )
 
 func scan(commands string, cb *board.ChessBoard) {

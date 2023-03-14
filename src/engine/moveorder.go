@@ -1,4 +1,4 @@
-package search
+package engine
 
 import (
 	"github.com/Droanox/ChessEngineAI/src/board"

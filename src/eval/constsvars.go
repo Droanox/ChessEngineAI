@@ -1,4 +1,4 @@
-package engine
+package eval
 
 import "github.com/Droanox/ChessEngineAI/src/board"
 

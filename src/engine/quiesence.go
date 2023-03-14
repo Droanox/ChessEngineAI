@@ -1,8 +1,8 @@
-package search
+package engine
 
 import (
 	"github.com/Droanox/ChessEngineAI/src/board"
-	engine "github.com/Droanox/ChessEngineAI/src/eval"
+	"github.com/Droanox/ChessEngineAI/src/eval"
 )
 
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
@@ -13,7 +13,7 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 		}
 	*/
 	nodes++
-	var standPat int = engine.Eval(*cb)
+	var standPat int = eval.Eval(*cb)
 	// fails high
 	if standPat >= beta {
 		return beta
