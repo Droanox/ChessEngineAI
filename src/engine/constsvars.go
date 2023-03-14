@@ -71,7 +71,10 @@ var reductionLimit int = 3 // Changeable by user
 
 // R is the depth reduction factor for null move pruning
 // This is the number of plies to reduce the depth by
-var R int = 2 // Changeable by user
+var nullMoveReduction int = 2 // Changeable by user
+
+// nullMoveDepth is the depth at which null move pruning is used
+var nullMoveDepth int = 3 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // General util

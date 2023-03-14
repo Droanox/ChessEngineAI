@@ -114,3 +114,13 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 
 	return true
 }
+
+func (cb *ChessBoard) MakeMoveNull() {
+	cb.CopyBoard()
+
+	// Reset enpassant
+	Enpassant = 64
+
+	// Switch side to move
+	SideToMove = 1 - SideToMove
+}
