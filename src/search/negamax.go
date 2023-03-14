@@ -8,9 +8,6 @@ import (
 )
 
 func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
-	// pvFound is used to determine if the principal variation was found
-	var pvFound bool = false
-
 	// pvLength[board.Ply+1] is used to store the length of the principal variation
 	pvLength[board.Ply+1] = board.Ply + 1
 
@@ -55,6 +52,9 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		scoreMoves(&moveList)
 	}
 
+	// movesSearched is used to count the number of moves searched
+	var movesSearched int
+
 	for i := 0; i < len(moveList); i++ {
 		pickMove(&moveList, i)
 
@@ -68,15 +68,29 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		// store the score
 		var score int
 
-		// Principal Variation Search (PVS)
+		// Principal Variation Search (PVS) and Late Move Reduction (LMR)
 		// https://www.chessprogramming.org/Principal_Variation_Search
-		if pvFound {
-			score = -negamax(-alpha-1, -alpha, depth-1, cb)
-			if (score > alpha) && (score < beta) {
-				score = -negamax(-beta, -score, depth-1, cb)
-			}
-		} else {
+		// https://www.chessprogramming.org/Late_Move_Reductions
+		// full depth search
+		if movesSearched == 0 {
 			score = -negamax(-beta, -alpha, depth-1, cb)
+			// LMR
+		} else {
+			// if the move satisfies the LMR conditions, we search deeper
+			if (movesSearched >= fullDepthMoves) && (depth >= reductionLimit) && ((moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0) {
+				score = -negamax(-alpha-1, -alpha, depth-2, cb)
+			} else {
+				score = alpha + 1
+			}
+			// if the move fails high, we search deeper
+			// principal variation search (PVS)
+			if score > alpha {
+				score = -negamax(-alpha-1, -alpha, depth-1, cb)
+				// if the move fails high, we search deeper again to confirm the move is good and not a fluke
+				if (score > alpha) && (score < beta) {
+					score = -negamax(-beta, -alpha, depth-1, cb)
+				}
+			}
 		}
 
 		// unmake the move
@@ -99,8 +113,6 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 			alpha = score
 
-			pvFound = true
-
 			pvTable[board.Ply+1][board.Ply+1] = moveList[i]
 
 			for j := board.Ply + 2; j < pvLength[board.Ply+2]; j++ {
@@ -109,6 +121,8 @@ func negamax(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 			pvLength[board.Ply+1] = pvLength[board.Ply+2]
 		}
+
+		movesSearched++
 	}
 
 	// check for checkmate and stalemate
