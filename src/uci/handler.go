@@ -70,7 +70,7 @@ func handlePosition(cmd string, cb *board.ChessBoard) {
 }
 
 func handleGo(cmd string, cb *board.ChessBoard) (err error) {
-	var movesToGo, depth, stopTime int = 0, -1, 0
+	var movesToGo, depth, stopTime int = 1, -1, 0
 	var timeLeft time.Duration
 
 	goCommands := strings.Fields(cmd)

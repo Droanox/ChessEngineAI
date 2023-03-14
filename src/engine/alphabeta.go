@@ -8,9 +8,11 @@ import (
 
 func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// check if the search should be stopped, time is checked every 10240 nodes
-	if nodes&10240 == 0 {
-		listenForStop()
-	}
+	/*
+		if nodes&10240 == 0 {
+			listenForStop()
+		}
+	*/
 
 	// pvLength[board.Ply+1] is used to store the length of the principal variation
 	pvLength[board.Ply+1] = board.Ply + 1

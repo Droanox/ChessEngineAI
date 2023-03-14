@@ -7,10 +7,11 @@ import (
 
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 	// check if the search should be stopped, time is checked every 10240 nodes
-	if nodes&10240 == 0 {
-		listenForStop()
-	}
-
+	/*
+		if nodes&10240 == 0 {
+			listenForStop()
+		}
+	*/
 	nodes++
 	var standPat int = engine.Eval(*cb)
 	// fails high

@@ -76,24 +76,41 @@ func Search(depth int, cb *board.ChessBoard) {
 	fmt.Println()
 }
 
-func listenForStop() {
-	if TimeControl && (time.Since(start).Milliseconds() > StopTime) {
-		isStopped = true
+func listenForStop(ch chan bool) {
+	for {
+		select {
+		case <-ch:
+			return
+		default:
+			if TimeControl && (time.Since(start).Milliseconds() > StopTime) {
+				isStopped = true
+			}
+			// ease up on the CPU
+			time.Sleep(1 * time.Millisecond)
+		}
 	}
 }
 
 func parsecmd(ch chan bool) {
+	exit := make(chan bool, 1)
+	go listenForStop(exit)
+
 	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		if scanner.Text() == "stop" {
-			isStopped = true
-			break
-		}
-		if scanner.Text() == "quit" {
-			os.Exit(0)
-		}
-		if <-ch {
-			break
+	for {
+		select {
+		case <-ch:
+			exit <- true
+			return
+		default:
+			if scanner.Text() == "stop" {
+				isStopped = true
+				break
+			}
+			if scanner.Text() == "quit" {
+				os.Exit(0)
+			}
+			// ease up on the CPU
+			time.Sleep(1 * time.Millisecond)
 		}
 	}
 }

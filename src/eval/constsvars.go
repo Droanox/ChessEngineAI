@@ -53,10 +53,6 @@ const (
 // Eval
 ///////////////////////////////////////////////////////////////////
 
-var offsetBySide = []int{
-	board.White: 1, board.Black: -1,
-}
-
 // Values from http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19
 
 var (
