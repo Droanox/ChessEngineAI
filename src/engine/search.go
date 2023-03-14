@@ -24,15 +24,30 @@ func Search(depth int, timeLeft time.Duration, cb *board.ChessBoard) {
 	// start timer
 	start := time.Now()
 
+	// set alpha and beta
+	alpha := math.MinInt32 // -INFINITY
+	beta := math.MaxInt32  // INFINITY
+
 	for currDepth := 1; currDepth <= depth; currDepth++ {
 		// follow principal variation
 		pvFollowed = true
 
 		// perform negamax search
-		var score int = alphabeta(math.MinInt32, math.MaxInt32, currDepth, cb)
+		var score int = alphabeta(alpha, beta, currDepth, cb)
 
 		//stop timer
 		elapsed := time.Since(start)
+
+		// aspiration window, if the score is outside the window, we search again
+		if (score <= alpha) || (score >= beta) {
+			alpha = math.MinInt32 // -INFINITY
+			beta = math.MaxInt32  // INFINITY
+			continue
+		}
+
+		// set window up for next iteration
+		alpha = score - 50
+		beta = score + 50
 
 		// print principal variation
 		fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, elapsed.Milliseconds())
