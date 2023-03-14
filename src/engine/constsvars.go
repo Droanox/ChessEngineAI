@@ -1,6 +1,8 @@
 package search
 
 import (
+	"time"
+
 	"github.com/Droanox/ChessEngineAI/src/board"
 )
 
@@ -75,6 +77,22 @@ var nullMoveReduction int = 2 // Changeable by user
 
 // nullMoveDepth is the depth at which null move pruning is used
 var nullMoveDepth int = 3 // Changeable by user
+
+///////////////////////////////////////////////////////////////////
+// Time management
+///////////////////////////////////////////////////////////////////
+
+// TimeControl is used to determine if time control is used
+var TimeControl bool = false
+
+// start is the time the search started
+var start time.Time
+
+// stopTime is the time the search should stop
+var StopTime int64
+
+// isStopped is used to determine if the search should be stopped
+var isStopped bool
 
 ///////////////////////////////////////////////////////////////////
 // General util

@@ -20,10 +20,8 @@ func scan(commands string, cb *board.ChessBoard) {
 		handleIsready()
 	case "ucinewgame":
 		handleUcinewgame(cb)
-		// cb.PrintChessBoard()
 	case "position":
 		handlePosition(commands, cb)
-		// cb.PrintChessBoard()
 	case "go":
 		handleGo(commands, cb)
 	default:
@@ -72,32 +70,45 @@ func handlePosition(cmd string, cb *board.ChessBoard) {
 }
 
 func handleGo(cmd string, cb *board.ChessBoard) (err error) {
-	var wtime, btime string
+	var movesToGo, depth, stopTime int = 0, -1, 0
 	var timeLeft time.Duration
 
-	depth := 100
 	goCommands := strings.Fields(cmd)
 
 	if len(goCommands) > 1 {
 		for i, command := range goCommands {
 			switch command {
-			case "depth":
-				depth, err = strconv.Atoi(goCommands[i+1])
 			case "wtime":
-				wtime = goCommands[i+1]
 				if board.SideToMove == board.White {
-					timeLeft, err = time.ParseDuration(wtime + "ms")
+					timeLeft, err = time.ParseDuration(goCommands[i+1] + "ms")
 				}
 			case "btime":
-				btime = goCommands[i+1]
 				if board.SideToMove == board.Black {
-					timeLeft, err = time.ParseDuration(btime + "ms")
+					timeLeft, err = time.ParseDuration(goCommands[i+1] + "ms")
 				}
+			case "movestogo":
+				movesToGo, err = strconv.Atoi(goCommands[i+1])
+			case "depth":
+				depth, err = strconv.Atoi(goCommands[i+1])
+			case "movetime":
+				stopTime, err = strconv.Atoi(goCommands[i+1])
+				engine.TimeControl = true
+				engine.StopTime = int64(stopTime)
 			}
 		}
 	}
 
-	engine.Search(depth, timeLeft, cb)
+	if depth == -1 {
+		depth = 100
+	}
+
+	if stopTime == 0 && timeLeft != 0 {
+		engine.TimeControl = true
+
+		engine.StopTime = timeLeft.Milliseconds()/int64(movesToGo) - (timeLeft.Milliseconds() / int64(movesToGo) / 10)
+	}
+
+	engine.Search(depth, cb)
 
 	return err
 }

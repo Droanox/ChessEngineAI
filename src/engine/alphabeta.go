@@ -7,6 +7,11 @@ import (
 )
 
 func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
+	// check if the search should be stopped, time is checked every 10240 nodes
+	if nodes&10240 == 0 {
+		listenForStop()
+	}
+
 	// pvLength[board.Ply+1] is used to store the length of the principal variation
 	pvLength[board.Ply+1] = board.Ply + 1
 
@@ -41,6 +46,12 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		cb.MakeMoveNull()
 		var score int = -alphabeta(-beta, -beta+1, depth-nullMoveReduction, cb)
 		cb.MakeBoard()
+
+		// check if the search should be stopped, time is checked every 10240 nodes
+		if isStopped {
+			return 0
+		}
+
 		if score >= beta {
 			return beta
 		}
@@ -102,6 +113,11 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 		// unmake the move
 		cb.MakeBoard()
+
+		// check if the search should be stopped, time is checked every 10240 nodes
+		if isStopped {
+			return 0
+		}
 
 		// fails high
 		if score >= beta {
