@@ -43,7 +43,7 @@ func handleUcinewgame(cb *board.ChessBoard) {
 	*cb = board.ChessBoard{}
 }
 
-func handlePosition(cmd string, cb *board.ChessBoard) {
+func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
 	posCommands := strings.Fields(cmd)
 	movesIndex := strings.Index(cmd, "moves")
 
@@ -52,14 +52,16 @@ func handlePosition(cmd string, cb *board.ChessBoard) {
 		cb.ParseFen(board.InitialPositionFen)
 	case "fen":
 		if movesIndex == -1 {
-			cb.ParseFen(cmd[13:])
+			err = cb.ParseFen(cmd[13:])
 		} else {
-			cb.ParseFen(cmd[13 : movesIndex-1])
+			err = cb.ParseFen(cmd[13 : movesIndex-1])
 		}
 	default:
 		fmt.Println("Position not found, using default position")
 		cb.ParseFen(board.InitialPositionFen)
 	}
+
+	engine.HashKey = engine.GenHash(*cb)
 
 	if movesIndex != -1 {
 		moveList := strings.Fields(cmd[movesIndex:])
@@ -67,6 +69,8 @@ func handlePosition(cmd string, cb *board.ChessBoard) {
 			handleMakeMove(move, cb)
 		}
 	}
+
+	return err
 }
 
 func handleGo(cmd string, cb *board.ChessBoard) (err error) {
@@ -107,7 +111,6 @@ func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 
 		engine.StopTime = timeLeft.Milliseconds()/int64(movesToGo) - (timeLeft.Milliseconds() / int64(movesToGo) / 10)
 	}
-
 	engine.Search(depth, cb)
 
 	return err

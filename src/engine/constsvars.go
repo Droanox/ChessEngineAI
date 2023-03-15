@@ -36,6 +36,13 @@ var killerMoves = [2][board.MaxPly]board.Move{}
 var historyMoves = [12][board.MaxPly]int{}
 
 ///////////////////////////////////////////////////////////////////
+// Aspiration windows
+///////////////////////////////////////////////////////////////////
+
+// aspirationWindow is the size of the aspiration window used in iterative deepening
+var aspirationWindow int = 50 // Changeable by user
+
+///////////////////////////////////////////////////////////////////
 // Principal variation
 ///////////////////////////////////////////////////////////////////
 
@@ -61,7 +68,7 @@ var pvFollowed bool
 
 // fullDepthMoves is the number of moves searched before
 // late move reduction is used
-var fullDepthMoves int = 5 // Changeable by user
+var fullDepthMoves int = 4 // Changeable by user
 
 // reductionLimit is the maximum number of reductions
 // that can be performed
@@ -79,6 +86,25 @@ var nullMoveReduction int = 2 // Changeable by user
 var nullMoveDepth int = 3 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
+// Transposition table
+///////////////////////////////////////////////////////////////////
+
+// Random Piece type and squares used for hashing
+var pieceKeys = [12][64]uint64{}
+
+// Random enpassant squares used for hashing
+var enpassantKeys = [64]uint64{}
+
+// Random Castling moves used for hashing
+var castleKeys = [16]uint64{}
+
+// Random sideToMove numbers used for hashing
+var sideKey uint64
+
+// HashKey is the hash key of the current position
+var HashKey uint64
+
+///////////////////////////////////////////////////////////////////
 // Time management
 ///////////////////////////////////////////////////////////////////
 
@@ -92,7 +118,7 @@ var start time.Time
 var StopTime int64
 
 // isStopped is used to determine if the search should be stopped
-var isStopped bool
+var IsStopped bool
 
 ///////////////////////////////////////////////////////////////////
 // General util

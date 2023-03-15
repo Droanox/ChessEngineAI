@@ -1,21 +1,23 @@
 package engine
 
 import (
-	"bufio"
 	"fmt"
 	"math"
-	"os"
 	"time"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
 )
+
+func Init() {
+	initHash()
+}
 
 func Search(depth int, cb *board.ChessBoard) {
 	// reset nodes counter
 	nodes = 0
 
 	// reset isStopped flag
-	isStopped = false
+	IsStopped = false
 
 	// reset killer moves and history moves
 	killerMoves = [2][board.MaxPly]board.Move{}
@@ -33,9 +35,9 @@ func Search(depth int, cb *board.ChessBoard) {
 	alpha := math.MinInt32 // -INFINITY
 	beta := math.MaxInt32  // INFINITY
 
-	// start listening for stop command
-	isFinished := make(chan bool, 1)
-	go parsecmd(isFinished)
+	// start listening for stop signal
+	isTimerOn := make(chan bool, 1)
+	go listenForStop(isTimerOn)
 
 	for currDepth := 1; currDepth <= depth; currDepth++ {
 		// follow principal variation
@@ -44,7 +46,8 @@ func Search(depth int, cb *board.ChessBoard) {
 		// perform negamax search
 		var score int = alphabeta(alpha, beta, currDepth, cb)
 
-		if isStopped {
+		// check if the search should be stopped, time is checked concurrently
+		if IsStopped {
 			break
 		}
 
@@ -52,12 +55,13 @@ func Search(depth int, cb *board.ChessBoard) {
 		if (score <= alpha) || (score >= beta) {
 			alpha = math.MinInt32 // -INFINITY
 			beta = math.MaxInt32  // INFINITY
+			currDepth--
 			continue
 		}
 
 		// set window up for next iteration
-		alpha = score - 50
-		beta = score + 50
+		alpha = score - aspirationWindow
+		beta = score + aspirationWindow
 
 		// print principal variation
 		fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, time.Since(start).Milliseconds())
@@ -67,8 +71,8 @@ func Search(depth int, cb *board.ChessBoard) {
 		}
 		fmt.Println()
 	}
-	// stop listening for stop command
-	isFinished <- true
+	// stop listening for stop signal
+	isTimerOn <- true
 
 	// print best move
 	fmt.Printf("bestmove ")
@@ -83,7 +87,7 @@ func listenForStop(ch chan bool) {
 			return
 		default:
 			if TimeControl && (time.Since(start).Milliseconds() > StopTime) {
-				isStopped = true
+				IsStopped = true
 			}
 			// ease up on the CPU
 			time.Sleep(1 * time.Millisecond)
@@ -91,6 +95,7 @@ func listenForStop(ch chan bool) {
 	}
 }
 
+/*
 func parsecmd(ch chan bool) {
 	exit := make(chan bool, 1)
 	go listenForStop(exit)
@@ -103,7 +108,7 @@ func parsecmd(ch chan bool) {
 			return
 		default:
 			if scanner.Text() == "stop" {
-				isStopped = true
+				IsStopped = true
 				break
 			}
 			if scanner.Text() == "quit" {
@@ -114,6 +119,7 @@ func parsecmd(ch chan bool) {
 		}
 	}
 }
+*/
 
 func PrintMove(move board.Move) {
 	fmt.Printf("%s%s",

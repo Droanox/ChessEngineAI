@@ -25,9 +25,7 @@ func initValues() {
 	}
 }
 
-func Init(board *board.ChessBoard) {
-	// cb = *board
-
+func Init() {
 	initValues()
 }
 
@@ -61,8 +59,9 @@ func Eval(cb board.ChessBoard) int {
 }
 
 func IsEndGame(cb board.ChessBoard) bool {
-	if cb.WhitePieces < 24 || cb.BlackPieces < 24 {
-		return true
+	if board.SideToMove == board.White {
+		return (cb.WhiteRooks|cb.WhiteQueen) == 0 && cb.WhitePawns != 0
+	} else {
+		return (cb.BlackRooks|cb.BlackQueen) == 0 && cb.BlackPawns != 0
 	}
-	return false
 }

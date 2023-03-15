@@ -37,8 +37,8 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 		var score int = -quiescence(-beta, -alpha, cb)
 		cb.MakeBoard()
 
-		// check if the search should be stopped, time is checked every 10240 nodes
-		if isStopped {
+		// check if the search should be stopped, time is checked concurrently
+		if IsStopped {
 			return 0
 		}
 

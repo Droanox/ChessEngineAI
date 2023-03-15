@@ -45,13 +45,13 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 	// Null Move Pruning (NMP)
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if (depth >= nullMoveDepth) && (!isChecked) && (board.Ply > 0) && !eval.IsEndGame(*cb) {
+	if (depth >= nullMoveDepth) && (!isChecked) && (board.Ply > -1) && !eval.IsEndGame(*cb) {
 		cb.MakeMoveNull()
-		var score int = -alphabeta(-beta, -beta+1, depth-nullMoveReduction, cb)
+		var score int = -alphabeta(-beta, -beta+1, depth-1-nullMoveReduction, cb)
 		cb.MakeBoard()
 
-		// check if the search should be stopped, time is checked every 10240 nodes
-		if isStopped {
+		// check if the search should be stopped, time is checked concurrently
+		if IsStopped {
 			return 0
 		}
 
@@ -69,8 +69,9 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// otherwise, we score all the moves
 	if pvFollowed {
 		scorePV(&moveList)
+	} else {
+		scoreMoves(&moveList)
 	}
-	scoreMoves(&moveList)
 
 	// movesSearched is used to count the number of moves searched
 	var movesSearched int
@@ -117,8 +118,8 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		// unmake the move
 		cb.MakeBoard()
 
-		// check if the search should be stopped, time is checked every 10240 nodes
-		if isStopped {
+		// check if the search should be stopped, time is checked concurrently
+		if IsStopped {
 			return 0
 		}
 

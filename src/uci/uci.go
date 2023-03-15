@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
+	"github.com/Droanox/ChessEngineAI/src/engine"
 )
 
 func Run() {
@@ -17,6 +18,10 @@ func Run() {
 		if cmd == "quit" {
 			break
 		}
-		scan(cmd, &cb)
+		if cmd == "stop" {
+			engine.IsStopped = true
+			continue
+		}
+		go scan(cmd, &cb)
 	}
 }
