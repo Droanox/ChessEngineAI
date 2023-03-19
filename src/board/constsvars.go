@@ -321,7 +321,7 @@ const (
 
 // PieceToASCII is used to change a piece to ASCII representation
 var pieceToASCII = []string{
-	0: ".",
+	0: "_",
 	1: "♙", 2: "♘", 3: "♗", 4: "♖", 5: "♕", 6: "♔",
 	7: "♟", 8: "♞", 9: "♝", 10: "♜", 11: "♛", 12: "♚",
 }

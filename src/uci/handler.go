@@ -25,7 +25,7 @@ func scan(commands string, cb *board.ChessBoard) {
 	case "go":
 		handleGo(commands, cb)
 	default:
-		fmt.Println("command not found")
+		return
 	}
 }
 
