@@ -8,10 +8,6 @@ import (
 	"github.com/Droanox/ChessEngineAI/src/board"
 )
 
-func Init() {
-	initHash()
-}
-
 func Search(depth int, cb *board.ChessBoard) {
 	// reset nodes counter
 	nodes = 0

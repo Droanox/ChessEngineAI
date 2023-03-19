@@ -202,5 +202,8 @@ func (cb *ChessBoard) ParseFen(fen string) (err error) {
 		FullMoveCounter = 0
 	}
 
+	// set the hash key
+	HashKey = GenHash(*cb)
+
 	return err
 }

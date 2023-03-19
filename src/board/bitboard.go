@@ -101,6 +101,9 @@ func (cb *ChessBoard) Init() {
 	// Below inits are used to initalise the bishop and rook attack tables
 	attackSliderInit(true)
 	attackSliderInit(false)
+
+	// Below init is used to initialise the hash keys for zobrist hashing
+	initHash()
 }
 
 ///////////////////////////////////////////////////////////////////

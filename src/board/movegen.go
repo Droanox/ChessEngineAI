@@ -50,6 +50,7 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 // CopyBoard copies the current board to the next ply
 func (oldBoard ChessBoard) CopyBoard() {
 	chessBoardCopies[Ply+1] = oldBoard
+	hashKeyCopies[Ply+1] = HashKey
 	aspectsCopies[Ply+1] = [5]int{SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter}
 	Ply++
 }
@@ -57,6 +58,7 @@ func (oldBoard ChessBoard) CopyBoard() {
 // MakeBoard copies the current board to the current ply
 func (newBoard *ChessBoard) MakeBoard() {
 	*newBoard = chessBoardCopies[Ply]
+	HashKey = hashKeyCopies[Ply]
 
 	SideToMove = aspectsCopies[Ply][0]
 	CastleRights = aspectsCopies[Ply][1]

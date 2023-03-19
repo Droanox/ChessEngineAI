@@ -1,11 +1,14 @@
-package engine
+package board
 
-/*
+import (
+	"math/rand"
+)
+
 // TranspositionTable is a hash table that stores the best move and score for a given position
 // It is used to avoid searching the same position multiple times
 func initHash() {
 	// loop through all the pieces on the board
-	for piece := board.WhitePawns - 1; piece < board.BlackKing; piece++ {
+	for piece := 0; piece < 12; piece++ {
 		// loop through all the squares on the board
 		for square := 0; square < 64; square++ {
 			// generate a random number for each piece on each square
@@ -25,7 +28,7 @@ func initHash() {
 	sideKey = rand.Uint64()
 }
 
-func GenHash(cb board.ChessBoard) uint64 {
+func GenHash(cb ChessBoard) uint64 {
 	finalHash := uint64(0)
 
 	pieceArr := []uint64{
@@ -33,20 +36,19 @@ func GenHash(cb board.ChessBoard) uint64 {
 		7: cb.BlackPawns, 8: cb.BlackKnights, 9: cb.BlackBishops, 10: cb.BlackRooks, 11: cb.BlackQueen, 12: cb.BlackKing,
 	}
 
-	for piece := board.WhitePawns; piece < board.BlackKing; piece++ {
-		for bitboard := pieceArr[piece]; bitboard != board.EmptyBoard; bitboard &= bitboard - 1 {
-			square := board.BitScanForward(bitboard)
-			finalHash ^= pieceKeys[piece][square]
+	for piece := WhitePawns; piece <= BlackKing; piece++ {
+		for bitboard := pieceArr[piece]; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
+			square := BitScanForward(bitboard)
+			finalHash ^= pieceKeys[piece-1][square]
 		}
 	}
-	if board.Enpassant != 64 {
-		finalHash ^= enpassantKeys[board.Enpassant]
+	if Enpassant != 64 {
+		finalHash ^= enpassantKeys[Enpassant]
 	}
-	finalHash ^= castleKeys[board.CastleRights]
-	if board.SideToMove == board.Black {
+	finalHash ^= castleKeys[CastleRights]
+	if SideToMove == Black {
 		finalHash ^= sideKey
 	}
 
 	return finalHash
 }
-*/

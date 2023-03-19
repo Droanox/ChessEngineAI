@@ -146,6 +146,7 @@ const MaxPly int = 100
 // that are used to store the state of the board
 var (
 	chessBoardCopies [MaxPly]ChessBoard
+	hashKeyCopies    [MaxPly]uint64
 	aspectsCopies    [MaxPly][5]int
 	// Ply is incremented after each coard copy, and decremented after each board make (paste)
 	Ply int = -1
@@ -180,6 +181,25 @@ var castleRightsUpdate = [64]int{
 	15, 15, 15, 15, 15, 15, 15, 15,
 	7, 15, 15, 15, 3, 15, 15, 11,
 }
+
+///////////////////////////////////////////////////////////////////
+// Transposition table
+///////////////////////////////////////////////////////////////////
+
+// Random Piece type and squares used for hashing
+var pieceKeys = [12][64]uint64{}
+
+// Random enpassant squares used for hashing
+var enpassantKeys = [64]uint64{}
+
+// Random Castling moves used for hashing
+var castleKeys = [16]uint64{}
+
+// Random sideToMove numbers used for hashing
+var sideKey uint64
+
+// HashKey is the hash key of the current position
+var HashKey uint64
 
 ///////////////////////////////////////////////////////////////////
 // Perft consts and vars

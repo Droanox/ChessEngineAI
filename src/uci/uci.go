@@ -13,7 +13,6 @@ func Run() {
 	cb := board.ChessBoard{}
 	cb.Init()
 	eval.Init()
-	engine.Init()
 
 	// Make a channel to receive commands from the user
 	cmdCh := make(chan string)

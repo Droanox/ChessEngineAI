@@ -40,6 +40,17 @@ func (cb ChessBoard) PerftTestTimer() {
 		nodes = 0
 
 		cb.MakeBoard()
+		// Uncomment this to check the hash after each test
+		/*
+			var checkHash uint64 = GenHash(cb)
+			if checkHash != HashKey {
+				cb.PrintChessBoard()
+				fmt.Print("MakeBoard: Hash mismatch\n")
+				fmt.Printf("%0x    Received\n", checkHash)
+				fmt.Printf("%0x    Expected\n", HashKey)
+				os.Exit(1)
+			}
+		*/
 	}
 	fmt.Println()
 }

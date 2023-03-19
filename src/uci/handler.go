@@ -61,8 +61,6 @@ func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
 		cb.ParseFen(board.InitialPositionFen)
 	}
 
-	engine.HashKey = engine.GenHash(*cb)
-
 	if movesIndex != -1 {
 		moveList := strings.Fields(cmd[movesIndex:])
 		for _, move := range moveList {
