@@ -21,7 +21,7 @@ func scoreMoves(movelist *[]board.Move) {
 
 	for i := 0; i < len(moves); i++ {
 		if moves[i].GetMoveCapturedPiece() != board.EmptyPiece {
-			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
+			moves[i].Score += moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
 		} else {
 			if moves[i] == killerMoves[0][board.Ply+1] {
 				moves[i].Score = moveOrderOffset - 10

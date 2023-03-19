@@ -113,20 +113,31 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 		7: &cb.BlackPawns, 8: &cb.BlackKnights, 9: &cb.BlackBishops, 10: &cb.BlackRooks, 11: &cb.BlackQueen, 12: &cb.BlackKing,
 	}
 
+	if Enpassant != 64 {
+		HashKey ^= enpassantKeys[Enpassant]
+	}
+
 	// Reset enpassant
 	Enpassant = 64
 
+	// Move piece to new square and update hash
 	*pieceArr[startPiece] ^= indexMasks[start] | indexMasks[end]
+	HashKey ^= pieceKeys[startPiece-1][start] ^ pieceKeys[startPiece-1][end]
+
 	// Capture
 	*pieceArr[CapturedPiece] ^= indexMasks[end]
+	HashKey ^= pieceKeys[CapturedPiece-1][end]
+
 	// Promotion
 	if flags >= MoveKnightPromotionCapture {
 		*pieceArr[startPiece] ^= indexMasks[end]
 		setBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
+		HashKey ^= pieceKeys[startPiece-1][end] ^ pieceKeys[PromotionToPiece[flags]+(6*SideToMove)-1][end]
 	}
 	// Enpassant capture
 	if flags == MoveEnpassantCapture {
 		*pieceArr[CapturedPiece] ^= indexMasks[end] | indexMasks[end+offsetBySide[SideToMove]]
+		HashKey ^= pieceKeys[CapturedPiece-1][end] ^ pieceKeys[CapturedPiece-1][end+offsetBySide[SideToMove]]
 	}
 
 	// Update bitboards
@@ -141,6 +152,7 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 
 	// Switch side to move
 	SideToMove = 1 - SideToMove
+	HashKey ^= sideKey
 
 	return true
 }
@@ -148,9 +160,13 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 func (cb *ChessBoard) MakeMoveNull() {
 	cb.CopyBoard()
 
+	if Enpassant != 64 {
+		HashKey ^= enpassantKeys[Enpassant]
+	}
 	// Reset enpassant
 	Enpassant = 64
 
 	// Switch side to move
 	SideToMove = 1 - SideToMove
+	HashKey ^= sideKey
 }

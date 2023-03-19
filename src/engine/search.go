@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
@@ -28,8 +27,8 @@ func Search(depth int, cb *board.ChessBoard) {
 	start = time.Now()
 
 	// set alpha and beta
-	alpha := math.MinInt32 // -INFINITY
-	beta := math.MaxInt32  // INFINITY
+	alpha := minScore // -INFINITY
+	beta := maxScore  // INFINITY
 
 	// start listening for stop signal
 	isTimerOn := make(chan bool, 1)
@@ -49,8 +48,8 @@ func Search(depth int, cb *board.ChessBoard) {
 
 		// aspiration window, if the score is outside the window, we search again
 		if (score <= alpha) || (score >= beta) {
-			alpha = math.MinInt32 // -INFINITY
-			beta = math.MaxInt32  // INFINITY
+			alpha = minScore // -INFINITY
+			beta = maxScore  // INFINITY
 			currDepth--
 			continue
 		}
@@ -60,7 +59,13 @@ func Search(depth int, cb *board.ChessBoard) {
 		beta = score + aspirationWindow
 
 		// print principal variation
-		fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, time.Since(start).Milliseconds())
+		if score > MateValue && score < MateScore {
+			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, (MateValue-score)/(2-1), time.Since(start).Milliseconds())
+		} else if score < -MateValue && score > -MateScore {
+			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, -(MateValue+score)/(2+1), time.Since(start).Milliseconds())
+		} else {
+			fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, time.Since(start).Milliseconds())
+		}
 		for i := 0; i < pvLength[board.Ply+1]; i++ {
 			PrintMove(pvTable[0][i])
 			fmt.Print(" ")
@@ -90,32 +95,6 @@ func listenForStop(ch chan bool) {
 		}
 	}
 }
-
-/*
-func parsecmd(ch chan bool) {
-	exit := make(chan bool, 1)
-	go listenForStop(exit)
-
-	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		select {
-		case <-ch:
-			exit <- true
-			return
-		default:
-			if scanner.Text() == "stop" {
-				IsStopped = true
-				break
-			}
-			if scanner.Text() == "quit" {
-				os.Exit(0)
-			}
-			// ease up on the CPU
-			time.Sleep(1 * time.Millisecond)
-		}
-	}
-}
-*/
 
 func PrintMove(move board.Move) {
 	fmt.Printf("%s%s",

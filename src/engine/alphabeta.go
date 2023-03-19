@@ -1,22 +1,25 @@
 package engine
 
 import (
-	"math"
-
 	"github.com/Droanox/ChessEngineAI/src/board"
 	"github.com/Droanox/ChessEngineAI/src/eval"
 )
 
 func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
-	// check if the search should be stopped, time is checked every 10240 nodes
-	/*
-		if nodes&10240 == 0 {
-			listenForStop()
-		}
-	*/
-
 	// pvLength[board.Ply+1] is used to store the length of the principal variation
 	pvLength[board.Ply+1] = board.Ply + 1
+
+	// hashFlag is used to store the type of the hash entry
+	// we dont know the type yet, so we set it to hashFlagAlpha
+	var hashFlag int = hashFlagAlpha
+
+	// score is used to store the eval of the position
+	var score int
+
+	// Transposition Table (TT)
+	if score = (ReadTT(alpha, beta, depth)); score != noHash && board.Ply > -1 && !(alpha != beta-1) {
+		return score
+	}
 
 	// when the depth is 0, we call quiescence search to search for captures
 	if depth == 0 {
@@ -47,7 +50,7 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// https://www.chessprogramming.org/Null_Move_Pruning
 	if (depth >= nullMoveDepth) && (!isChecked) && (board.Ply > -1) && !eval.IsEndGame(*cb) {
 		cb.MakeMoveNull()
-		var score int = -alphabeta(-beta, -beta+1, depth-1-nullMoveReduction, cb)
+		score = -alphabeta(-beta, -beta+1, depth-1-nullMoveReduction, cb)
 		cb.MakeBoard()
 
 		// check if the search should be stopped, time is checked concurrently
@@ -69,9 +72,8 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// otherwise, we score all the moves
 	if pvFollowed {
 		scorePV(&moveList)
-	} else {
-		scoreMoves(&moveList)
 	}
+	scoreMoves(&moveList)
 
 	// movesSearched is used to count the number of moves searched
 	var movesSearched int
@@ -79,6 +81,7 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// search through the moves
 	for i := 0; i < len(moveList); i++ {
 		pickMove(&moveList, i)
+		//board.PrintMoveList(moveList)
 
 		if !cb.MakeMove(moveList[i]) {
 			continue
@@ -86,9 +89,6 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 		// increment legal moves for checkmate and stalemate detection
 		legalMovesNum++
-
-		// store the score
-		var score int
 
 		// Principal Variation Search (PVS) and Late Move Reduction (LMR)
 		// https://www.chessprogramming.org/Principal_Variation_Search
@@ -125,6 +125,8 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 		// fails high
 		if score >= beta {
+			WriteTT(beta, depth, hashFlagBeta)
+
 			if (moveList[i].GetMoveFlags() & board.MoveCaptures) == 0 {
 				killerMoves[1][board.Ply+1] = killerMoves[0][board.Ply+1]
 				killerMoves[0][board.Ply+1] = moveList[i]
@@ -132,8 +134,11 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 			return beta
 		}
+
 		// found a better move
 		if score > alpha {
+			hashFlag = hashFlagExact
+
 			if (moveList[i].GetMoveFlags() & board.MoveCaptures) == 0 {
 				historyMoves[moveList[i].GetMoveStartPiece()+(6*board.SideToMove)-1][moveList[i].GetMoveEnd()] += depth
 			}
@@ -155,11 +160,13 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// check for checkmate and stalemate
 	if legalMovesNum == 0 {
 		if isChecked {
-			return (math.MinInt32 + 10) + board.Ply
+			return MateValue + board.Ply
 		} else {
 			return 0
 		}
 	}
+
+	WriteTT(alpha, depth, hashFlag)
 
 	// fails low
 	return alpha

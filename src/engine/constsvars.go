@@ -27,20 +27,20 @@ var MVV_LVA = [7][7]int{
 // The first index is the number of killers (2)
 // The second index is the ply
 // The value is the move
-var killerMoves = [2][board.MaxPly]board.Move{}
+var killerMoves [2][board.MaxPly]board.Move
 
 // historyMoves is used to store the history of moves
 // The first index is the number of pieces (12)
 // The second index is the ply
 // The value is the move
-var historyMoves = [12][board.MaxPly]int{}
+var historyMoves [12][board.MaxPly]int
 
 ///////////////////////////////////////////////////////////////////
 // Aspiration windows
 ///////////////////////////////////////////////////////////////////
 
 // aspirationWindow is the size of the aspiration window used in iterative deepening
-var aspirationWindow int = 50 // Changeable by user
+const aspirationWindow int = 50 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Principal variation
@@ -68,11 +68,11 @@ var pvFollowed bool
 
 // fullDepthMoves is the number of moves searched before
 // late move reduction is used
-var fullDepthMoves int = 4 // Changeable by user
+const fullDepthMoves int = 4 // Changeable by user
 
 // reductionLimit is the maximum number of reductions
 // that can be performed
-var reductionLimit int = 3 // Changeable by user
+const reductionLimit int = 3 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Null move pruning
@@ -80,29 +80,32 @@ var reductionLimit int = 3 // Changeable by user
 
 // R is the depth reduction factor for null move pruning
 // This is the number of plies to reduce the depth by
-var nullMoveReduction int = 2 // Changeable by user
+const nullMoveReduction int = 2 // Changeable by user
 
 // nullMoveDepth is the depth at which null move pruning is used
-var nullMoveDepth int = 3 // Changeable by user
+const nullMoveDepth int = 3 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Transposition table
 ///////////////////////////////////////////////////////////////////
 
-// Random Piece type and squares used for hashing
-var pieceKeys = [12][64]uint64{}
+// noHash is used to determine if the hash table entry is empty
+const noHash int = maxScore + 1
 
-// Random enpassant squares used for hashing
-var enpassantKeys = [64]uint64{}
+// hashFlagExact is used to determine if the hash table entry is exact
+const hashFlagExact int = 0
 
-// Random Castling moves used for hashing
-var castleKeys = [16]uint64{}
+// hashFlagAlpha is used to determine if the hash table entry is alpha
+const hashFlagAlpha int = 1
 
-// Random sideToMove numbers used for hashing
-var sideKey uint64
+// hashFlagBeta is used to determine if the hash table entry is beta
+const hashFlagBeta int = 2
 
-// HashKey is the hash key of the current position
-var HashKey uint64
+// hashSize is the size of the hash table
+const hashSize uint64 = 2 << 19 // default:16MB Changeable by user
+
+// ttSize is the size of the transposition table
+var tt [hashSize]TranspositionTable
 
 ///////////////////////////////////////////////////////////////////
 // Time management
@@ -124,8 +127,16 @@ var IsStopped bool
 // General util
 ///////////////////////////////////////////////////////////////////
 
+const maxScore = 100000
+
+const minScore = -100000
+
+const MateValue = minScore + 1000
+
+const MateScore = MateValue + 1000
+
 // moveOrderOffset is used to offset the move ordering score
-const moveOrderOffset = 1000 //math.MaxInt32 - 1024
+const moveOrderOffset = 100
 
 // nodes is the number of nodes searched
 // This is used to print the number of nodes searched

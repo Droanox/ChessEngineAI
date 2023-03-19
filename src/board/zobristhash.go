@@ -7,6 +7,8 @@ import (
 // TranspositionTable is a hash table that stores the best move and score for a given position
 // It is used to avoid searching the same position multiple times
 func initHash() {
+	rand.Seed(9052375092375182470)
+
 	// loop through all the pieces on the board
 	for piece := 0; piece < 12; piece++ {
 		// loop through all the squares on the board

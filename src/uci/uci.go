@@ -24,6 +24,10 @@ func Run() {
 	for {
 		// Wait for a command to be sent to the channel
 		cmd := <-cmdCh
+		// If the command is "quit", return
+		if cmd == "quit" {
+			return
+		}
 		// Set the bool to false so that the user input is not scanned
 		okayToScan = false
 		// Scan the command
@@ -39,6 +43,7 @@ func scanLine(cmdCh chan string, okayToScan *bool) {
 	for scanner.Scan() {
 		switch cmd := scanner.Text(); cmd {
 		case "quit":
+			cmdCh <- "quit"
 			return
 		case "stop":
 			engine.IsStopped = true
