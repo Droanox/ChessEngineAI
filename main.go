@@ -1,28 +1,29 @@
 package main
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
-	engine "github.com/Droanox/ChessEngineAI/src/engine"
-	eval "github.com/Droanox/ChessEngineAI/src/eval"
+	"github.com/Droanox/ChessEngineAI/src/engine"
+	"github.com/Droanox/ChessEngineAI/src/eval"
 	"github.com/Droanox/ChessEngineAI/src/uci"
 )
 
 // command to run to create the .exe
 // fyne package -os windows -icon ChessEngineAI.png
 func main() {
-	cb := board.ChessBoard{}
-	cb.Init()
-	eval.Init(&cb)
-
 	debug := true
 
 	if debug {
-		cb.ParseFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
+		cb := board.ChessBoard{}
+		cb.Init()
+		eval.Init()
+		engine.Init()
+		cb.ParseFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/r3K2R w K-kq -")
+		engine.HashKey = engine.GenHash(cb)
 		cb.PrintChessBoard()
-		timer, _ := time.ParseDuration("20000" + "ms")
-		engine.Search(10, timer, &cb)
+		fmt.Printf("%0x", engine.HashKey)
+		//engine.Search(12, &cb)
 	} else {
 		uci.Run()
 	}
