@@ -6,7 +6,7 @@ import (
 )
 
 func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
-	// pvLength[board.Ply+1] is used to store the length of the principal variation
+	// pvLength[board.Ply] is used to store the length of the principal variation
 	pvLength[board.Ply+1] = board.Ply + 1
 
 	// hashFlag is used to store the type of the hash entry
@@ -16,8 +16,15 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 	// score is used to store the eval of the position
 	var score int
 
+	// pvNode is used to determine if the node is a PV node
+	var pvNode bool = alpha != beta-1
+
+	if board.IsRepetition() {
+		return 0
+	}
+
 	// Transposition Table (TT)
-	if score = (ReadTT(alpha, beta, depth)); score != noHash && board.Ply > -1 && !(alpha != beta-1) {
+	if score = (ReadTT(alpha, beta, depth)); score != noHash && board.Ply > 0 && !pvNode {
 		return score
 	}
 
@@ -26,9 +33,7 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		return quiescence(alpha, beta, cb)
 	}
 
-	// If the maximum ply is reached, we evaluate the position and return the score
-	// instead of searching further as it'll break the search
-
+	// increment the number of nodes searched
 	nodes++
 
 	// check if the side to move is in check
@@ -48,7 +53,7 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 	// Null Move Pruning (NMP)
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if (depth >= nullMoveDepth) && (!isChecked) && (board.Ply > -1) && !eval.IsEndGame(*cb) {
+	if (depth >= nullMoveDepth) && (!isChecked) && !eval.IsEndGame(*cb) && !pvNode {
 		cb.MakeMoveNull()
 		score = -alphabeta(-beta, -beta+1, depth-1-nullMoveReduction, cb)
 		cb.MakeBoard()
@@ -70,9 +75,9 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 	// if the principal variation was found in the previous iteration, we score the principal variation
 	// otherwise, we score all the moves
-	if pvFollowed {
-		scorePV(&moveList)
-	}
+	//if pvFollowed {
+	//	scorePV(&moveList)
+	//}
 	scoreMoves(&moveList)
 
 	// movesSearched is used to count the number of moves searched
@@ -99,7 +104,7 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 		} else {
 			// if the move satisfies the LMR conditions, we search deeper
 			// LMR
-			if (movesSearched >= fullDepthMoves) && (depth >= reductionLimit) && ((moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0) {
+			if (movesSearched > fullDepthMoves) && (depth >= reductionLimit) && !isChecked && ((moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0) {
 				score = -alphabeta(-alpha-1, -alpha, depth-2, cb)
 			} else {
 				score = alpha + 1
@@ -128,8 +133,8 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 			WriteTT(beta, depth, hashFlagBeta)
 
 			if (moveList[i].GetMoveFlags() & board.MoveCaptures) == 0 {
-				killerMoves[1][board.Ply+1] = killerMoves[0][board.Ply+1]
-				killerMoves[0][board.Ply+1] = moveList[i]
+				killerMoves[1][board.Ply] = killerMoves[0][board.Ply]
+				killerMoves[0][board.Ply] = moveList[i]
 			}
 
 			return beta
@@ -145,13 +150,13 @@ func alphabeta(alpha int, beta int, depth int, cb *board.ChessBoard) int {
 
 			alpha = score
 
-			pvTable[board.Ply+1][board.Ply+1] = moveList[i]
+			pvTable[board.Ply][board.Ply] = moveList[i]
 
-			for j := board.Ply + 2; j < pvLength[board.Ply+2]; j++ {
-				pvTable[board.Ply+1][j] = pvTable[board.Ply+2][j]
+			for j := board.Ply + 1; j < pvLength[board.Ply+1]; j++ {
+				pvTable[board.Ply][j] = pvTable[board.Ply+1][j]
 			}
 
-			pvLength[board.Ply+1] = pvLength[board.Ply+2]
+			pvLength[board.Ply] = pvLength[board.Ply+1]
 		}
 
 		movesSearched++

@@ -127,9 +127,9 @@ var IsStopped bool
 // General util
 ///////////////////////////////////////////////////////////////////
 
-const maxScore = 100000
+const maxScore = 10000000
 
-const minScore = -100000
+const minScore = -10000000
 
 const MateValue = minScore + 1000
 

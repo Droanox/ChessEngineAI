@@ -8,13 +8,14 @@ import (
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 	// check if the search should be stopped, time is checked every 10240 nodes
 	nodes++
+
 	var standPat int = eval.Eval(*cb)
 	// fails high
 	if standPat >= beta {
 		return beta
 	}
 	// found a better move
-	if alpha < standPat {
+	if standPat > alpha {
 		alpha = standPat
 	}
 
@@ -37,13 +38,14 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 			return 0
 		}
 
-		// fails high
-		if score >= beta {
-			return beta
-		}
 		// found a better move
 		if score > alpha {
 			alpha = score
+
+			// fails high
+			if score >= beta {
+				return beta
+			}
 		}
 	}
 	// fails low

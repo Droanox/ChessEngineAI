@@ -3,11 +3,25 @@ package uci
 import (
 	"bufio"
 	"os"
+	"strings"
 
 	"github.com/Droanox/ChessEngineAI/src/board"
 	"github.com/Droanox/ChessEngineAI/src/engine"
 	"github.com/Droanox/ChessEngineAI/src/eval"
 )
+
+// validCommands is a map of valid commands
+var validCommands = map[string]bool{"uci": true, "isready": true, "ucinewgame": true, "position": true, "ponderhit": true, "go": true}
+
+// isReady is a bool to check if the engine is ready
+var isReady bool = true
+
+// hasParsed is a bool to check if the engine has parsed the position
+// if not, it will use the initial position
+var hasParsed bool = false
+
+// chMax is the maximum size of the channel
+var chMax int = 10
 
 func Run() {
 	cb := board.ChessBoard{}
@@ -15,7 +29,7 @@ func Run() {
 	eval.Init()
 
 	// Make a channel to receive commands from the user
-	cmdCh := make(chan string)
+	cmdCh := make(chan string, chMax)
 	// Make a bool to control the scanning of the user input
 	var okayToScan bool = true
 	// Concurrently scan the user input
@@ -28,12 +42,8 @@ func Run() {
 		if cmd == "quit" {
 			return
 		}
-		// Set the bool to false so that the user input is not scanned
-		okayToScan = false
 		// Scan the command
 		scan(cmd, &cb)
-		// Set the bool to true so that the user input can be scanned again
-		okayToScan = true
 	}
 }
 
@@ -43,14 +53,25 @@ func scanLine(cmdCh chan string, okayToScan *bool) {
 	for scanner.Scan() {
 		switch cmd := scanner.Text(); cmd {
 		case "quit":
+			// If the engine is searching, we need to stop it first
+			engine.IsStopped = true
+			// Empty the channel
+			for len(cmdCh) > 0 {
+				<-cmdCh
+			}
+			// Send the quit command to the channel
 			cmdCh <- "quit"
 			return
 		case "stop":
 			engine.IsStopped = true
 		default:
 			// if the engine is not searching, we can scan the command
-			if (*okayToScan && cmd != "") || cmd == "isready" {
-				cmdCh <- cmd
+			if cmd != "" && validCommands[strings.Fields(cmd)[0]] {
+				if len(cmdCh) == chMax {
+					<-cmdCh
+				} else {
+					cmdCh <- cmd
+				}
 			}
 		}
 	}

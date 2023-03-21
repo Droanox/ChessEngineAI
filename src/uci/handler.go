@@ -10,8 +10,6 @@ import (
 	"github.com/Droanox/ChessEngineAI/src/engine"
 )
 
-var hasParsed bool = false
-
 func scan(commands string, cb *board.ChessBoard) {
 	cmd := strings.Fields(commands)[0]
 
@@ -23,7 +21,9 @@ func scan(commands string, cb *board.ChessBoard) {
 	case "ucinewgame":
 		handleUcinewgame(cb)
 	case "position":
+		isReady = false
 		handlePosition(commands, cb)
+		isReady = true
 	case "go":
 		handleGo(commands, cb)
 	default:
@@ -38,7 +38,9 @@ func handleUci() {
 }
 
 func handleIsready() {
-	fmt.Println("readyok")
+	if isReady {
+		fmt.Println("readyok")
+	}
 }
 
 func handleUcinewgame(cb *board.ChessBoard) {
@@ -81,8 +83,7 @@ func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
 
 func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 	if !hasParsed {
-		fmt.Println("Position hasn't been parsed yet")
-		return
+		handlePosition("position startpos", cb)
 	}
 	var movesToGo, depth, stopTime int = 1, -1, 0
 	var timeLeft time.Duration

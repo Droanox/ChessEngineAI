@@ -149,7 +149,7 @@ var (
 	hashKeyCopies    [MaxPly]uint64
 	aspectsCopies    [MaxPly][5]int
 	// Ply is incremented after each coard copy, and decremented after each board make (paste)
-	Ply int = -1
+	Ply int = 0
 )
 
 // IntToPiece is a map of the internal piece value to the string representation
@@ -200,6 +200,18 @@ var sideKey uint64
 
 // HashKey is the hash key of the current position
 var HashKey uint64
+
+///////////////////////////////////////////////////////////////////
+// Repetition table
+///////////////////////////////////////////////////////////////////
+
+// repetitionTable is used to store the hash keys of the board
+// to check for the 3 fold repetition rule
+var repetitionTable [MaxPly]uint64
+
+// repetitionTableIndex is used to store the index of the repetition table
+// This is used to determine if the current position has been repeated
+//var repetitionTableIndex int
 
 ///////////////////////////////////////////////////////////////////
 // Perft consts and vars

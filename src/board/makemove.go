@@ -160,13 +160,14 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 func (cb *ChessBoard) MakeMoveNull() {
 	cb.CopyBoard()
 
+	// update hash
 	if Enpassant != 64 {
 		HashKey ^= enpassantKeys[Enpassant]
 	}
 	// Reset enpassant
 	Enpassant = 64
 
-	// Switch side to move
+	// Switch side to move and update hash
 	SideToMove = 1 - SideToMove
 	HashKey ^= sideKey
 }

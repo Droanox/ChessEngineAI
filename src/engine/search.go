@@ -60,9 +60,9 @@ func Search(depth int, cb *board.ChessBoard) {
 
 		// print principal variation
 		if score > MateValue && score < MateScore {
-			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, (MateValue-score)/(2-1), time.Since(start).Milliseconds())
+			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, (MateValue-score)/2-1, time.Since(start).Milliseconds())
 		} else if score < -MateValue && score > -MateScore {
-			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, -(MateValue+score)/(2+1), time.Since(start).Milliseconds())
+			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, -(MateValue+score)/2+1, time.Since(start).Milliseconds())
 		} else {
 			fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, time.Since(start).Milliseconds())
 		}
