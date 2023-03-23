@@ -4,27 +4,21 @@ import (
 	"github.com/Droanox/ChessEngineAI/src/board"
 )
 
-/*
-	func scorePV(movelist *[]board.Move) {
-		pvFollowed = false
-		moves := (*movelist)
+func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
+	moves := (*movelist)
 
-		for i := 0; i < len(moves); i++ {
-			if moves[i].Move == pvTable[0][board.Ply+1].Move {
-				moves[i].Score = moveOrderOffset + 100
-				pvFollowed = true
-			}
+	for i := 0; i < len(moves); i++ {
+		if bestMove.Move == moves[i].Move {
+			moves[i].Score = moveOrderOffset + 160
+			return
 		}
 	}
-*/
-func scoreMoves(movelist *[]board.Move) {
-	moves := (*movelist)
 
 	if pvFollowed {
 		pvFollowed = false
 		for i := 0; i < len(moves); i++ {
 			if moves[i].Move == pvTable[0][board.Ply].Move {
-				moves[i].Score = moveOrderOffset + 1000
+				moves[i].Score = moveOrderOffset + 150
 				pvFollowed = true
 				return
 			}
@@ -32,15 +26,24 @@ func scoreMoves(movelist *[]board.Move) {
 	}
 
 	for i := 0; i < len(moves); i++ {
-		if moves[i].GetMoveCapturedPiece() != board.EmptyPiece {
+		if moves[i].GetMoveFlags()&board.MoveCaptures != 0 {
 			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
 		} else {
-			if moves[i].Move == killerMoves[0][board.Ply].Move {
+			if moves[i].Move == mateKillerMoves[board.Ply].Move {
 				moves[i].Score = moveOrderOffset - 10
-			} else if moves[i].Move == killerMoves[1][board.Ply].Move {
+			} else if moves[i].Move == killerMoves[0][board.Ply].Move {
 				moves[i].Score = moveOrderOffset - 20
-			} else {
-				moves[i].Score = historyMoves[moves[i].GetMoveStartPiece()+(6*board.SideToMove)-1][moves[i].GetMoveEnd()]
+			} else if moves[i].Move == killerMoves[1][board.Ply].Move {
+				moves[i].Score = moveOrderOffset - 30
+			}
+			if moves[i].GetMoveFlags()&board.MoveKingCastle != 0 {
+				moves[i].Score = moveOrderOffset - 40
+			} else if moves[i].GetMoveFlags()&board.MoveQueenCastle != 0 {
+				moves[i].Score = moveOrderOffset - 50
+			}
+
+			if i > 0 && counterMoves[moves[i-1].GetMoveStart()][moves[i-1].GetMoveEnd()].Move == moves[i].Move {
+				moves[i].Score += 1
 			}
 		}
 	}

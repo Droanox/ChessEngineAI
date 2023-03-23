@@ -154,6 +154,19 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 	SideToMove = 1 - SideToMove
 	HashKey ^= sideKey
 
+	// Uncomment this to check for hash mismatch
+	/*
+		var checkHash uint64 = GenHash(*cb)
+		if checkHash != HashKey {
+			cb.PrintChessBoard()
+			fmt.Print("MakeMove: Hash mismatch\n")
+			fmt.Printf("%0x    Received\n", checkHash)
+			fmt.Printf("%0x    Expected\n", HashKey)
+			cb.MakeBoard()
+			cb.PrintChessBoard()
+			os.Exit(1)
+		}
+	*/
 	return true
 }
 

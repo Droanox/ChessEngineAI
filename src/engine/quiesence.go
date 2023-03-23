@@ -22,7 +22,7 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 	var moveList = []board.Move{}
 	cb.GenerateCaptures(&moveList)
 
-	scoreMoves(&moveList)
+	scoreMoves(&moveList, board.Move{})
 
 	for i := 0; i < len(moveList); i++ {
 		pickMove(&moveList, i)
@@ -50,4 +50,33 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 	}
 	// fails low
 	return alpha
+}
+
+func ZWSearch(beta int, depth int, cb *board.ChessBoard) int {
+	if depth == 0 {
+		return quiescence(beta-1, beta, cb)
+	}
+
+	var moveList = []board.Move{}
+	cb.GenerateMoves(&moveList)
+
+	for i := 0; i < len(moveList); i++ {
+		if !cb.MakeMove(moveList[i]) {
+			continue
+		}
+
+		var score int = -ZWSearch(1-beta, depth-1, cb)
+		cb.MakeBoard()
+
+		// check if the search should be stopped, time is checked concurrently
+		if IsStopped {
+			return 0
+		}
+
+		// found a better move
+		if score >= beta {
+			return beta
+		}
+	}
+	return beta - 1
 }

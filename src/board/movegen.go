@@ -47,6 +47,14 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 	return false
 }
 
+func (cb ChessBoard) IsInCheck() bool {
+	if SideToMove == White {
+		return cb.IsSquareAttackedBySide(BitScanForward(cb.WhiteKing), Black)
+	} else {
+		return cb.IsSquareAttackedBySide(BitScanForward(cb.BlackKing), White)
+	}
+}
+
 // CopyBoard copies the current board to the next ply
 func (oldBoard ChessBoard) CopyBoard() {
 	chessBoardCopies[Ply] = oldBoard

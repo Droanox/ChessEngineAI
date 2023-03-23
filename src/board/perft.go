@@ -8,7 +8,7 @@ import (
 // PerftTest runs a series of perft tests to verify that the move generation is working correctly
 func (cb ChessBoard) PerftTest() {
 	cb.Init()
-	for _, test := range perftTests {
+	for _, test := range PerftTests {
 		cb.CopyBoard()
 
 		cb.ParseFen(test.FEN)
@@ -26,7 +26,7 @@ func (cb ChessBoard) PerftTest() {
 // PerftTestTimer is similar to PerftTest but also prints the time it took to run the test
 func (cb ChessBoard) PerftTestTimer() {
 	cb.Init()
-	for _, test := range perftTests {
+	for _, test := range PerftTests {
 		start := time.Now()
 		cb.CopyBoard()
 

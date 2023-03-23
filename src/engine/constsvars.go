@@ -29,11 +29,12 @@ var MVV_LVA = [7][7]int{
 // The value is the move
 var killerMoves [2][board.MaxPly]board.Move
 
-// historyMoves is used to store the history of moves
-// The first index is the number of pieces (12)
-// The second index is the ply
-// The value is the move
-var historyMoves [12][board.MaxPly]int
+// mateKillerMoves is used to store the killer moves
+// that are used to find mate
+var mateKillerMoves [board.MaxPly]board.Move
+
+// counterMoves is used to store the counter moves
+var counterMoves [64][64]board.Move
 
 ///////////////////////////////////////////////////////////////////
 // Aspiration windows
@@ -72,7 +73,7 @@ const fullDepthMoves int = 4 // Changeable by user
 
 // reductionLimit is the maximum number of reductions
 // that can be performed
-const reductionLimit int = 3 // Changeable by user
+const reductionLimit int = 2 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Null move pruning
@@ -136,7 +137,7 @@ const MateValue = minScore + 1000
 const MateScore = MateValue + 1000
 
 // moveOrderOffset is used to offset the move ordering score
-const moveOrderOffset = 100
+const moveOrderOffset = 10000
 
 // nodes is the number of nodes searched
 // This is used to print the number of nodes searched
