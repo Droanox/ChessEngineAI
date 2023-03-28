@@ -11,17 +11,23 @@ func Search(depth int, cb *board.ChessBoard) {
 	// reset nodes counter
 	nodes = 0
 
+	// set max depth
+	if depth > board.MaxPly-4 {
+		depth = board.MaxPly - 4
+	}
+
 	// reset isStopped flag
 	IsStopped = false
 
 	// reset killer moves and history moves
 	killerMoves = [2][board.MaxPly]board.Move{}
-	counterMoves = [64][64]board.Move{}
+	historyMoves = [2][64][64]int{}
+	// counterMoves = [2][64][64]board.Move{}
 
 	// reset principal variation
 	pvTable = [board.MaxPly][board.MaxPly]board.Move{}
 	pvLength = [board.MaxPly]int{}
-	pvFollowed = false
+	// pvFollowed = false
 
 	// start timer
 	start = time.Now()
@@ -35,16 +41,12 @@ func Search(depth int, cb *board.ChessBoard) {
 	go listenForStop(isTimerOn)
 
 	for currDepth := 1; currDepth <= depth; currDepth++ {
-		// check if the search should be stopped, time is checked concurrently
+		// perform negamax search
+		var score int = alphabeta(alpha, beta, currDepth, StandardSearch, cb)
+
 		if IsStopped {
 			break
 		}
-
-		// follow principal variation
-		pvFollowed = true
-
-		// perform negamax search
-		var score int = alphabeta(alpha, beta, currDepth, cb)
 
 		// aspiration window, if the score is outside the window, we search again
 		if (score <= alpha) || (score >= beta) {
@@ -58,19 +60,21 @@ func Search(depth int, cb *board.ChessBoard) {
 		alpha = score - aspirationWindow
 		beta = score + aspirationWindow
 
-		// print principal variation
-		if score > MateValue && score < MateScore {
-			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, (MateValue-score)/2-1, time.Since(start).Milliseconds())
-		} else if score < -MateValue && score > -MateScore {
-			fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, -(MateValue+score)/2+1, time.Since(start).Milliseconds())
-		} else {
-			fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, time.Since(start).Milliseconds())
+		if pvLength[0] > 0 {
+			// print principal variation
+			if score > -MateValue && score < -MateScore {
+				fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, -(MateValue+score)/2-1, time.Since(start).Milliseconds())
+			} else if score < MateValue && score > MateScore {
+				fmt.Printf("info depth %d nodes %d score mate %d time %d pv ", currDepth, nodes, (MateValue-score)/2+1, time.Since(start).Milliseconds())
+			} else {
+				fmt.Printf("info depth %d nodes %d score cp %d time %d pv ", currDepth, nodes, score, time.Since(start).Milliseconds())
+			}
+			for i := 0; i < pvLength[0]; i++ {
+				PrintMove(pvTable[0][i])
+				fmt.Print(" ")
+			}
+			fmt.Println()
 		}
-		for i := 0; i < pvLength[0]; i++ {
-			PrintMove(pvTable[0][i])
-			fmt.Print(" ")
-		}
-		fmt.Println()
 	}
 	// stop listening for stop signal
 	isTimerOn <- true
@@ -79,6 +83,8 @@ func Search(depth int, cb *board.ChessBoard) {
 	fmt.Printf("bestmove ")
 	PrintMove(pvTable[0][0])
 	fmt.Println()
+
+	// fmt.Println(board.Ply, " ", board.RepetitionTableIndexOffset, time.Since(start).Milliseconds())
 }
 
 func listenForStop(ch chan bool) {
@@ -91,7 +97,7 @@ func listenForStop(ch chan bool) {
 				IsStopped = true
 			}
 			// ease up on the CPU
-			time.Sleep(1 * time.Millisecond)
+			time.Sleep(200 * time.Microsecond)
 		}
 	}
 }

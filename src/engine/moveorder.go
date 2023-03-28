@@ -13,18 +13,18 @@ func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
 			return
 		}
 	}
-
-	if pvFollowed {
-		pvFollowed = false
-		for i := 0; i < len(moves); i++ {
-			if moves[i].Move == pvTable[0][board.Ply].Move {
-				moves[i].Score = moveOrderOffset + 150
-				pvFollowed = true
-				return
+	/*
+		if pvFollowed {
+			pvFollowed = false
+			for i := 0; i < len(moves); i++ {
+				if moves[i].Move == pvTable[0][board.Ply].Move {
+					moves[i].Score = moveOrderOffset + 150
+					pvFollowed = true
+					return
+				}
 			}
 		}
-	}
-
+	*/
 	for i := 0; i < len(moves); i++ {
 		if moves[i].GetMoveFlags()&board.MoveCaptures != 0 {
 			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
@@ -35,6 +35,8 @@ func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
 				moves[i].Score = moveOrderOffset - 20
 			} else if moves[i].Move == killerMoves[1][board.Ply].Move {
 				moves[i].Score = moveOrderOffset - 30
+			} else {
+				moves[i].Score = historyMoves[board.SideToMove][moves[i].GetMoveStart()][moves[i].GetMoveEnd()]
 			}
 			if moves[i].GetMoveFlags()&board.MoveKingCastle != 0 {
 				moves[i].Score = moveOrderOffset - 40
@@ -42,9 +44,9 @@ func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
 				moves[i].Score = moveOrderOffset - 50
 			}
 
-			if i > 0 && counterMoves[moves[i-1].GetMoveStart()][moves[i-1].GetMoveEnd()].Move == moves[i].Move {
-				moves[i].Score += 1
-			}
+			// if i > 0 && counterMoves[board.SideToMove][moves[i-1].GetMoveStart()][moves[i-1].GetMoveEnd()].Move == moves[i].Move {
+			// moves[i].Score += 1
+			// }
 		}
 	}
 }

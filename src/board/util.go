@@ -80,7 +80,7 @@ func (cb ChessBoard) GetPieceType(square int) int {
 ///////////////////////////////////////////////////////////////////
 
 func IsRepetition() bool {
-	for i := 0; i < Ply; i++ {
+	for i := 0; i < (RepetitionTableIndexOffset + Ply); i++ {
 		if repetitionTable[i] == HashKey {
 			return true
 		}
@@ -164,7 +164,9 @@ func (cb *ChessBoard) ParseFen(fen string) (err error) {
 	*cb = ChessBoard{}
 	// set default values
 	SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter = 0, 0, -1, 0, 1
+	RepetitionTableIndexOffset, repetitionTable = 0, [1000]uint64{}
 	fenRep := strings.Fields(fen)
+
 	var file int
 	var rank = 7
 

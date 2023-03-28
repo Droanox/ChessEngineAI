@@ -27,21 +27,23 @@ func ReadTT(alpha int, beta int, depth int, bestMove *board.Move) int {
 			var score int = entryTT.score
 
 			// adjust the score based on the depth
-			if score < MateScore {
+			if score < -MateScore {
 				score += board.Ply
 			}
 			// adjust the score based on the depth
-			if score > -MateScore {
+			if score > MateScore {
 				score -= board.Ply
 			}
 
 			if entryTT.flag == hashFlagExact {
 				return score
-			} else if entryTT.flag == hashFlagAlpha {
+			}
+			if entryTT.flag == hashFlagAlpha {
 				if score <= alpha {
 					return alpha
 				}
-			} else if entryTT.flag == hashFlagBeta {
+			}
+			if entryTT.flag == hashFlagBeta {
 				if score >= beta {
 					return beta
 				}
@@ -56,19 +58,20 @@ func ReadTT(alpha int, beta int, depth int, bestMove *board.Move) int {
 
 func WriteTT(score int, depth int, flag int, bestMove board.Move) {
 	entryTT := &tt[board.HashKey%hashSize]
+	if depth > entryTT.depth {
+		// adjust the score based on the depth
+		if score < -MateScore {
+			score -= board.Ply
+		}
+		// adjust the score based on the depth
+		if score > MateScore {
+			score += board.Ply
+		}
 
-	// adjust the score based on the depth
-	if score < MateScore {
-		score -= board.Ply
+		entryTT.key = board.HashKey
+		entryTT.score = score
+		entryTT.depth = depth
+		entryTT.flag = flag
+		entryTT.bestMove = bestMove
 	}
-	// adjust the score based on the depth
-	if score > -MateScore {
-		score += board.Ply
-	}
-
-	entryTT.key = board.HashKey
-	entryTT.score = score
-	entryTT.depth = depth
-	entryTT.flag = flag
-	entryTT.bestMove = bestMove
 }

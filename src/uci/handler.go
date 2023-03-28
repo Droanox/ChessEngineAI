@@ -76,7 +76,7 @@ func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
 
 	hasParsed = true
 
-	engine.ClearTT()
+	// engine.ClearTT()
 
 	return err
 }
@@ -114,13 +114,13 @@ func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 	}
 
 	if depth == -1 {
-		depth = 100
+		depth = board.MaxPly
 	}
 
 	if stopTime == 0 && timeLeft != 0 {
 		engine.TimeControl = true
 
-		engine.StopTime = timeLeft.Milliseconds()/int64(movesToGo) - (timeLeft.Milliseconds() / int64(movesToGo) / 10)
+		engine.StopTime = timeLeft.Milliseconds()/int64(movesToGo) - ((timeLeft.Milliseconds() / int64(movesToGo)) / 10)
 	}
 	engine.Search(depth, cb)
 
@@ -143,24 +143,29 @@ func handleMakeMove(move string, cb *board.ChessBoard) bool {
 			if promotionMask != 0 {
 				if ((flags & ^board.MoveCaptures) == board.MoveKnightPromotion) && move[4] == 'n' {
 					cb.MakeMove(moveList[i])
+					board.RepetitionTableIndexOffset++
 					board.Ply--
 					return true
 				} else if ((flags & ^board.MoveCaptures) == board.MoveBishopPromotion) && move[4] == 'b' {
 					cb.MakeMove(moveList[i])
+					board.RepetitionTableIndexOffset++
 					board.Ply--
 					return true
 				} else if ((flags & ^board.MoveCaptures) == board.MoveRookPromotion) && move[4] == 'r' {
 					cb.MakeMove(moveList[i])
+					board.RepetitionTableIndexOffset++
 					board.Ply--
 					return true
 				} else if ((flags & ^board.MoveCaptures) == board.MoveQueenPromotion) && move[4] == 'q' {
 					cb.MakeMove(moveList[i])
+					board.RepetitionTableIndexOffset++
 					board.Ply--
 					return true
 				}
 				continue
 			} else {
 				cb.MakeMove(moveList[i])
+				board.RepetitionTableIndexOffset++
 				board.Ply--
 				return true
 			}

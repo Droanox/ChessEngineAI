@@ -6,17 +6,22 @@ import (
 )
 
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
+	// check if the position is a repetition
+	if board.Ply > 0 && board.IsRepetition() {
+		return 0
+	}
+
 	// check if the search should be stopped, time is checked every 10240 nodes
 	nodes++
 
 	var standPat int = eval.Eval(*cb)
-	// fails high
-	if standPat >= beta {
-		return beta
-	}
 	// found a better move
 	if standPat > alpha {
 		alpha = standPat
+		// fails high
+		if standPat >= beta {
+			return beta
+		}
 	}
 
 	var moveList = []board.Move{}

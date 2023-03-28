@@ -61,8 +61,7 @@ func (oldBoard ChessBoard) CopyBoard() {
 	hashKeyCopies[Ply] = HashKey
 	aspectsCopies[Ply] = [5]int{SideToMove, CastleRights, Enpassant, HalfMoveClock, FullMoveCounter}
 
-	//repetitionTableIndex++
-	repetitionTable[Ply] = HashKey
+	repetitionTable[(RepetitionTableIndexOffset+Ply)%1000] = HashKey
 	Ply++
 }
 
@@ -78,8 +77,6 @@ func (newBoard *ChessBoard) MakeBoard() {
 	Enpassant = aspectsCopies[Ply][2]
 	HalfMoveClock = aspectsCopies[Ply][3]
 	FullMoveCounter = aspectsCopies[Ply][4]
-
-	//repetitionTableIndex--
 }
 
 ///////////////////////////////////////////////////////////////////

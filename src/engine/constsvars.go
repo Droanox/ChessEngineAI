@@ -34,7 +34,9 @@ var killerMoves [2][board.MaxPly]board.Move
 var mateKillerMoves [board.MaxPly]board.Move
 
 // counterMoves is used to store the counter moves
-var counterMoves [64][64]board.Move
+// var counterMoves [2][64][64]board.Move
+
+var historyMoves [2][64][64]int
 
 ///////////////////////////////////////////////////////////////////
 // Aspiration windows
@@ -42,6 +44,16 @@ var counterMoves [64][64]board.Move
 
 // aspirationWindow is the size of the aspiration window used in iterative deepening
 const aspirationWindow int = 50 // Changeable by user
+
+///////////////////////////////////////////////////////////////////
+// Alpha beta search flags
+///////////////////////////////////////////////////////////////////
+
+const StandardSearch int = 0
+
+const PVSSearch int = 1
+
+const NullMovePruningSearch int = 2
 
 ///////////////////////////////////////////////////////////////////
 // Principal variation
@@ -61,7 +73,7 @@ var pvTable [board.MaxPly][board.MaxPly]board.Move
 // pvFollowed is used to determine if the principal variation was followed
 // if true then the principal variation was followed
 // if false then the principal variation was not followed
-var pvFollowed bool
+// var pvFollowed bool
 
 ///////////////////////////////////////////////////////////////////
 // Late move reduction
@@ -73,7 +85,7 @@ const fullDepthMoves int = 4 // Changeable by user
 
 // reductionLimit is the maximum number of reductions
 // that can be performed
-const reductionLimit int = 2 // Changeable by user
+const reductionLimit int = 3 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Null move pruning
@@ -103,7 +115,7 @@ const hashFlagAlpha int = 1
 const hashFlagBeta int = 2
 
 // hashSize is the size of the hash table
-const hashSize uint64 = 2 << 19 // default:16MB Changeable by user
+const hashSize uint64 = 2 << 22 // default: 2 << 22 // Changeable by user
 
 // ttSize is the size of the transposition table
 var tt [hashSize]TranspositionTable
@@ -128,13 +140,14 @@ var IsStopped bool
 // General util
 ///////////////////////////////////////////////////////////////////
 
-const maxScore = 10000000
+const maxScore = 20000
 
-const minScore = -10000000
+const minScore = -20000
 
-const MateValue = minScore + 1000
+const MateValue = (maxScore - 100)
 
-const MateScore = MateValue + 1000
+// MateScore is the score used to determine if a move is a mate
+const MateScore = (MateValue - 100)
 
 // moveOrderOffset is used to offset the move ordering score
 const moveOrderOffset = 10000
