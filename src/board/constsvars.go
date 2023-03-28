@@ -140,7 +140,7 @@ const (
 
 // MaxPly is the maximum number of plys that can be made in a game
 // A ply is a move made by a player
-const MaxPly int = 100
+const MaxPly int = 128
 
 // chessBoardCopies and aspectscopies are arrays
 // that are used to store the state of the board
@@ -207,11 +207,11 @@ var HashKey uint64
 
 // repetitionTable is used to store the hash keys of the board
 // to check for the 3 fold repetition rule
-var repetitionTable [MaxPly]uint64
+var repetitionTable [1000]uint64
 
 // repetitionTableIndex is used to store the index of the repetition table
 // This is used to determine if the current position has been repeated
-//var repetitionTableIndex int
+var RepetitionTableIndexOffset int
 
 ///////////////////////////////////////////////////////////////////
 // Perft consts and vars
