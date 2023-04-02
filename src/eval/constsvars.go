@@ -3,61 +3,57 @@ package eval
 import "github.com/Droanox/ChessEngineAI/src/board"
 
 ///////////////////////////////////////////////////////////////////
-// General util
+// Masks
 ///////////////////////////////////////////////////////////////////
-/*
-var cb = board.ChessBoard{}
 
-var pieceArr = []*uint64{
-	0: &cb.WhitePawns, 1: &cb.WhiteKnights, 2: &cb.WhiteBishops, 3: &cb.WhiteRooks, 4: &cb.WhiteQueen, 5: &cb.WhiteKing,
-	6: &cb.BlackPawns, 7: &cb.BlackKnights, 8: &cb.BlackBishops, 9: &cb.BlackRooks, 10: &cb.BlackQueen, 11: &cb.BlackKing,
-}
-*/
+// Bitboard masks for files on the chessboard, index by square
+var FileMasks = [64]uint64{}
 
-var pieceToColour = []int{
-	0: board.White, 1: board.White, 2: board.White, 3: board.White, 4: board.White, 5: board.White,
-	6: board.Black, 7: board.Black, 8: board.Black, 9: board.Black, 10: board.Black, 11: board.Black,
-}
+// Bitboard masks for ranks on the chessboard, index by square
+var RankMasks = [64]uint64{}
 
-/*
-// differs from piece values in the board package, as there is now no "Empty" and
-// all piece values have been decreased by one, this is so I don't have to introduce
-// an empty space for all initializations in the eval tables
-const (
-	Pawn = iota
-	Knight
-	Bishop
-	Rook
-	Queen
-	King
-)
+// Isolated pawn masks, index by square
+var IsolatedMasks = [64]uint64{}
 
-const (
-	WhitePawns = iota
-	WhiteKnights
-	WhiteBishops
-	WhiteRooks
-	WhiteQueen
-	WhiteKing
-
-	BlackPawns
-	BlackKnights
-	BlackBishops
-	BlackRooks
-	BlackQueen
-	BlackKing
-)
-*/
+// Passed pawn masks, index by sidetomove and by square
+var PassedMasks = [2][64]uint64{}
 
 ///////////////////////////////////////////////////////////////////
-// Eval
+// Pawn
+///////////////////////////////////////////////////////////////////
+
+var pastPawnBonusIndex = [64]int{
+	0, 0, 0, 0, 0, 0, 0, 0,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	2, 2, 2, 2, 2, 2, 2, 2,
+	3, 3, 3, 3, 3, 3, 3, 3,
+	4, 4, 4, 4, 4, 4, 4, 4,
+	5, 5, 5, 5, 5, 5, 5, 5,
+	6, 6, 6, 6, 6, 6, 6, 6,
+	7, 7, 7, 7, 7, 7, 7, 7,
+}
+
+var doublePawnPenalty int = -10
+
+var isolatedPawnPenalty int = -20
+
+var PastPawnBonus = [8]int{0, 10, 30, 50, 70, 100, 150, 200}
+
+///////////////////////////////////////////////////////////////////
+// Piece and square values
 ///////////////////////////////////////////////////////////////////
 
 // Values from http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19
 
 var (
-	pieceValuesMG = [6]int{82, 337, 365, 477, 1025, 12000}
-	pieceValuesEG = [6]int{94, 281, 297, 512, 936, 12000}
+	pieceValuesMG = [6]int{82, 337, 365, 477, 1025, 0}
+	pieceValuesEG = [6]int{94, 281, 297, 512, 936, 0}
+)
+
+var (
+	gamephaseInc = [12]int{0, 0, 1, 1, 1, 1, 2, 2, 4, 4, 0, 0}
+	tableMG      = [12][64]int{}
+	tableEG      = [12][64]int{}
 )
 
 var pawnMG = [64]int{
@@ -208,4 +204,13 @@ var piecesEG = [6][64]int{
 	rookEG,
 	queenEG,
 	kingEG,
+}
+
+///////////////////////////////////////////////////////////////////
+// General util
+///////////////////////////////////////////////////////////////////
+
+var pieceToColour = []int{
+	0: board.White, 1: board.White, 2: board.White, 3: board.White, 4: board.White, 5: board.White,
+	6: board.Black, 7: board.Black, 8: board.Black, 9: board.Black, 10: board.Black, 11: board.Black,
 }

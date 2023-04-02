@@ -8,12 +8,7 @@ import (
 // pawn, knight, bishop, rook, queen, king in that order
 // with the first row as white and second as black
 
-var (
-	gamephaseInc = [12]int{0, 0, 1, 1, 1, 1, 2, 2, 4, 4, 0, 0}
-	tableMG      = [12][64]int{}
-	tableEG      = [12][64]int{}
-)
-
+// initValues initializes the piece values arrays for the mid game and end game
 func initValues() {
 	for piece := board.Pawn - 1; piece < board.King; piece++ {
 		for square := 0; square < 64; square++ {
@@ -25,10 +20,24 @@ func initValues() {
 	}
 }
 
-func Init() {
-	initValues()
+// initFileAndRanksMasks initializes the FileMasks and RankMasks arrays
+func initMasks() {
+	for square := 0; square < 64; square++ {
+		FileMasks[square] = board.FileAOn << (square % 8)
+		RankMasks[square] = board.Rank1On << ((square / 8) * 8)
+		IsolatedMasks[square] = ((FileMasks[square] << 1) &^ board.FileAOn) | ((FileMasks[square] >> 1) &^ board.FileHOn)
+		PassedMasks[board.White][square] = (IsolatedMasks[square] ^ FileMasks[square]) << (8 + (8 * (square / 8)))
+		PassedMasks[board.Black][square] = (IsolatedMasks[square] ^ FileMasks[square]) >> (8 + (8 * ((63 - square) / 8)))
+	}
 }
 
+// Init initializes the evaluation package
+func Init() {
+	initValues()
+	initMasks()
+}
+
+// Eval returns the evaluation of the given chess board
 func Eval(cb board.ChessBoard) int {
 	var pieceArr = []*uint64{
 		0: &cb.WhitePawns, 1: &cb.WhiteKnights, 2: &cb.WhiteBishops, 3: &cb.WhiteRooks, 4: &cb.WhiteQueen, 5: &cb.WhiteKing,
@@ -39,12 +48,35 @@ func Eval(cb board.ChessBoard) int {
 	var mg, eg [2]int
 
 	for i, pieceBoard := range pieceArr {
+		pieceBoardNew := pieceBoard
 		side = pieceToColour[i]
-		for bitboard := *pieceBoard; bitboard != board.EmptyBoard; bitboard &= bitboard - 1 {
+		for bitboard := *pieceBoardNew; bitboard != board.EmptyBoard; bitboard &= bitboard - 1 {
 			square = board.BitScanForward(bitboard)
 			mg[side] += tableMG[i][square]
 			eg[side] += tableEG[i][square]
 			gamephase += gamephaseInc[i]
+
+			if i == 0 || i == 6 {
+				// double pawn penalty
+				if board.BitCount(FileMasks[square]&*pieceBoard) > 1 {
+					mg[side] += doublePawnPenalty
+					eg[side] += doublePawnPenalty
+					// fmt.Println("Double pawn count on File:", "doublePawns", board.IndexToSquare[square], board.BitCount(FileMasks[square]&*pieceBoard))
+				}
+				// isolated pawn penalty
+				if IsolatedMasks[square]&*pieceBoard == 0 {
+					mg[side] += isolatedPawnPenalty
+					eg[side] += isolatedPawnPenalty
+					// fmt.Println("Isolated pawn penalty on:", board.IndexToSquare[square], isolatedPawnPenalty)
+				}
+				// Passed pawn bonus
+				if PassedMasks[side][square]&*pieceBoard == 0 {
+					mg[side] += PastPawnBonus[pastPawnBonusIndex[square^(56*side)]]
+					eg[side] += PastPawnBonus[pastPawnBonusIndex[square^(56*side)]]
+					// fmt.Println("Passed pawn bonus on:", board.IndexToSquare[square], PastPawnBonus[pastPawnBonusIndex[square^(56*side)]])
+				}
+
+			}
 		}
 	}
 
@@ -58,6 +90,8 @@ func Eval(cb board.ChessBoard) int {
 	return ((scoreMG * phaseMG) + (scoreEG * phaseEG)) / 24
 }
 
+// IsEndGame returns true if the given chess board is an end game
+// isn't perfect, for quick computation
 func IsEndGame(cb board.ChessBoard) bool {
 	if board.SideToMove == board.White {
 		return (cb.WhiteRooks|cb.WhiteQueen) == 0 && cb.WhitePawns != 0
