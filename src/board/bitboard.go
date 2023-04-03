@@ -45,23 +45,23 @@ type ChessBoard struct {
 
 // The following are used to initialise the attack tables
 var (
-	pawnAttacks   [2][64]uint64
-	knightAttacks [64]uint64
+	PawnAttacks   [2][64]uint64
+	KnightAttacks [64]uint64
 	bishopMasks   [64]uint64
 	bishopAttacks [64][512]uint64
 	rookMasks     [64]uint64
 	rookAttacks   [64][4096]uint64
-	kingAttacks   [64]uint64
+	KingAttacks   [64]uint64
 	indexMasks    [64]uint64
 )
 
 // The following are used to initialise the attack tables
 func attackLeaperInit() {
 	for i := 0; i < 64; i++ {
-		pawnAttacks[White][i] = maskPawnAttacks(White, i)
-		pawnAttacks[Black][i] = maskPawnAttacks(Black, i)
-		knightAttacks[i] = maskKnightAttacks(i)
-		kingAttacks[i] = maskKingAttacks(i)
+		PawnAttacks[White][i] = maskPawnAttacks(White, i)
+		PawnAttacks[Black][i] = maskPawnAttacks(Black, i)
+		KnightAttacks[i] = maskKnightAttacks(i)
+		KingAttacks[i] = maskKingAttacks(i)
 		indexMasks[i] = 1 << i
 	}
 }

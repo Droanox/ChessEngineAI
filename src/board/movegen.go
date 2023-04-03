@@ -15,9 +15,9 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 	both := cb.WhitePieces | cb.BlackPieces
 	if side == White {
 		switch {
-		case (pawnAttacks[Black][square] & cb.WhitePawns) != EmptyBoard:
+		case (PawnAttacks[Black][square] & cb.WhitePawns) != EmptyBoard:
 			return true
-		case (knightAttacks[square] & cb.WhiteKnights) != EmptyBoard:
+		case (KnightAttacks[square] & cb.WhiteKnights) != EmptyBoard:
 			return true
 		case (GetBishopAttacks(square, both) & cb.WhiteBishops) != EmptyBoard:
 			return true
@@ -25,14 +25,14 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 			return true
 		case (GetQueenAttacks(square, both) & cb.WhiteQueen) != EmptyBoard:
 			return true
-		case (kingAttacks[square] & cb.WhiteKing) != EmptyBoard:
+		case (KingAttacks[square] & cb.WhiteKing) != EmptyBoard:
 			return true
 		}
 	} else {
 		switch {
-		case (pawnAttacks[White][square] & cb.BlackPawns) != EmptyBoard:
+		case (PawnAttacks[White][square] & cb.BlackPawns) != EmptyBoard:
 			return true
-		case (knightAttacks[square] & cb.BlackKnights) != EmptyBoard:
+		case (KnightAttacks[square] & cb.BlackKnights) != EmptyBoard:
 			return true
 		case (GetBishopAttacks(square, both) & cb.BlackBishops) != EmptyBoard:
 			return true
@@ -40,18 +40,28 @@ func (cb ChessBoard) IsSquareAttackedBySide(square int, side int) bool {
 			return true
 		case (GetQueenAttacks(square, both) & cb.BlackQueen) != EmptyBoard:
 			return true
-		case (kingAttacks[square] & cb.BlackKing) != EmptyBoard:
+		case (KingAttacks[square] & cb.BlackKing) != EmptyBoard:
 			return true
 		}
 	}
 	return false
 }
 
+// IsInCheck returns true if the side to move is in check
 func (cb ChessBoard) IsInCheck() bool {
 	if SideToMove == White {
 		return cb.IsSquareAttackedBySide(BitScanForward(cb.WhiteKing), Black)
 	} else {
 		return cb.IsSquareAttackedBySide(BitScanForward(cb.BlackKing), White)
+	}
+}
+
+// IsGiveCheck returns true if the move gives check to opponent
+func (cb ChessBoard) IsGiveCheck() bool {
+	if SideToMove == White {
+		return cb.IsSquareAttackedBySide(BitScanForward(cb.BlackKing), White)
+	} else {
+		return cb.IsSquareAttackedBySide(BitScanForward(cb.WhiteKing), Black)
 	}
 }
 
@@ -168,7 +178,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 					}
 				}
 			}
-			for attacks := pawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
+			for attacks := PawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
 				// get end square (next bit)
 				end = BitScanForward(attacks)
 				if (indexMasks[start] & Rank7On) != EmptyBoard {
@@ -182,7 +192,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 				PopBit(&attacks, end)
 			}
 			if Enpassant != -1 {
-				attacks = pawnAttacks[White][start] & (1 << Enpassant)
+				attacks = PawnAttacks[White][start] & (1 << Enpassant)
 				if attacks != EmptyBoard {
 					// enpassant capture
 					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
@@ -227,7 +237,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 					}
 				}
 			}
-			for attacks := pawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
+			for attacks := PawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
 				// get end square (next bit)
 				end = BitScanForward(attacks)
 				if (indexMasks[start] & Rank2On) != EmptyBoard {
@@ -241,7 +251,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 				PopBit(&attacks, end)
 			}
 			if Enpassant != -1 {
-				attacks = pawnAttacks[Black][start] & (1 << Enpassant)
+				attacks = PawnAttacks[Black][start] & (1 << Enpassant)
 				if attacks != EmptyBoard {
 					// enpassant capture
 					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
@@ -272,7 +282,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 	// Generate knight moves
 	for bitboard := knights; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
 		start = BitScanForward(bitboard)
-		for attacks := knightAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+		for attacks := KnightAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
 			end = BitScanForward(attacks)
 			if isBitOn(otherSide, end) {
 				// capture
@@ -328,7 +338,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 	// Generate King moves
 	for bitboard := king; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
 		start = BitScanForward(bitboard)
-		for attacks := kingAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+		for attacks := KingAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
 			end = BitScanForward(attacks)
 			if isBitOn(otherSide, end) {
 				// capture
@@ -374,7 +384,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 		for bitboard := cb.WhitePawns; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
 			// Get the start square (next bit)
 			start = BitScanForward(bitboard)
-			for attacks := pawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
+			for attacks := PawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
 				// Get the end square (next bit)
 				end = BitScanForward(attacks)
 				if (indexMasks[start] & Rank7On) != EmptyBoard {
@@ -388,7 +398,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 				PopBit(&attacks, end)
 			}
 			if Enpassant != -1 {
-				attacks = pawnAttacks[White][start] & (1 << Enpassant)
+				attacks = PawnAttacks[White][start] & (1 << Enpassant)
 				if attacks != EmptyBoard {
 					// enpassant capture
 					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
@@ -400,7 +410,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 		for bitboard := cb.BlackPawns; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
 			// Get the start square (next bit)
 			start = BitScanForward(bitboard)
-			for attacks := pawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
+			for attacks := PawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
 				// Get the end square (next bit)
 				end = BitScanForward(attacks)
 				if (indexMasks[start] & Rank2On) != EmptyBoard {
@@ -414,7 +424,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 				PopBit(&attacks, end)
 			}
 			if Enpassant != -1 {
-				attacks = pawnAttacks[Black][start] & (1 << Enpassant)
+				attacks = PawnAttacks[Black][start] & (1 << Enpassant)
 				if attacks != EmptyBoard {
 					// enpassant capture
 					AddMove(moveList, EncodeMove(start, BitScanForward(attacks), Pawn, Pawn, MoveEnpassantCapture))
@@ -425,7 +435,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 	// Generate knight moves
 	for bitboard := knights; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
 		start = BitScanForward(bitboard)
-		for attacks := knightAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+		for attacks := KnightAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
 			end = BitScanForward(attacks)
 			if isBitOn(otherSide, end) {
 				// capture
@@ -469,7 +479,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 	// Generate King moves
 	for bitboard := king; bitboard != EmptyBoard; bitboard &= bitboard - 1 {
 		start = BitScanForward(bitboard)
-		for attacks := kingAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
+		for attacks := KingAttacks[start] & target; attacks != 0; attacks &= attacks - 1 {
 			end = BitScanForward(attacks)
 			if isBitOn(otherSide, end) {
 				// capture

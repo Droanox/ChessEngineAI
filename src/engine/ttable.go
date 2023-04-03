@@ -58,6 +58,7 @@ func ReadTT(alpha int, beta int, depth int, bestMove *board.Move) int {
 
 func WriteTT(score int, depth int, flag int, bestMove board.Move) {
 	entryTT := &tt[board.HashKey%hashSize]
+
 	if depth > entryTT.depth {
 		// adjust the score based on the depth
 		if score < -MateScore {

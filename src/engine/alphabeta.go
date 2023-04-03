@@ -1,11 +1,20 @@
 package engine
 
 import (
+	"math"
+
 	"github.com/Droanox/ChessEngineAI/src/board"
 	"github.com/Droanox/ChessEngineAI/src/eval"
 )
 
 func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) int {
+	// pvLength[board.Ply] is used to store the length of the principal variation
+	pvLength[board.Ply] = board.Ply
+
+	if board.Ply > 0 && board.IsRepetition() {
+		return 0
+	}
+
 	// hashFlag is used to store the type of the hash entry
 	// we dont know the type yet, so we set it to hashFlagAlpha
 	var hashFlag int = hashFlagAlpha
@@ -16,20 +25,13 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 	// pvNode is used to determine if the node is a PV node
 	var pvNode bool = beta-alpha > 1
 
-	if board.Ply > 0 && board.IsRepetition() {
-		return 0
-	}
-
 	// bestMove is used to store the best move
-	var bestMove board.Move
+	var bestMove board.Move = board.Move{}
 
 	// Transposition Table (TT)
 	if score := ReadTT(alpha, beta, depth, &bestMove); score != noHash && !pvNode {
 		return score
 	}
-
-	// pvLength[board.Ply] is used to store the length of the principal variation
-	pvLength[board.Ply] = board.Ply
 
 	// when the depth is 0, we call quiescence search to search for captures
 	if depth == 0 {
@@ -41,7 +43,7 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 
 	// Mate Distance Pruning (MDP)
 	// https://www.chessprogramming.org/Mate_Distance_Pruning
-	if alpha < -MateValue+board.Ply-1 {
+	if alpha < -MateValue+board.Ply {
 		alpha = -MateValue + board.Ply
 	}
 	if beta > MateValue-board.Ply {
@@ -108,7 +110,6 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 		} else {
 			// if the move satisfies the LMR conditions, we search deeper
 			// LMR
-			// reduction := 0
 			if (depth >= reductionLimit) &&
 				(i >= fullDepthMoves) &&
 				((moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0) &&
@@ -116,15 +117,13 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 				!cb.IsInCheck() &&
 				killerMoves[0][board.Ply] != moveList[i] &&
 				killerMoves[1][board.Ply] != moveList[i] {
-				if depth >= 6 {
-					score = -alphabeta(-alpha-1, -alpha, depth/3, StandardSearch, cb)
-				} else {
-					score = -alphabeta(-alpha-1, -alpha, depth-2, StandardSearch, cb)
+				reduction := int(math.Sqrt(float64(depth-1)) + math.Sqrt(float64(i-1)))
+				if pvNode {
+					reduction = 2
 				}
-				// fmt.Println(int(math.Sqrt(float64(depth-1)) + math.Sqrt(float64(i-1))))
-				// reduction = Max(0, int(math.Sqrt(float64(depth-1))+math.Sqrt(float64(i-1))))
-				// reduction = Max(0, Min(reduction, depth-1))
-				// score = -alphabeta(-alpha-1, -alpha, depth-reduction, StandardSearch, cb)
+				reduction = Max(0, Min(reduction, depth-1))
+				score = -alphabeta(-alpha-1, -alpha, depth-reduction, LMRSearch, cb)
+				// score = -alphabeta(-alpha-1, -alpha, depth-2, LMRSearch, cb)
 			} else {
 				score = alpha + 1
 			}
@@ -153,9 +152,13 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 
 			bestMove = moveList[i]
 
+			// if moveList[i].GetMoveFlags()&board.MoveCaptures != 0 {
+			// historyMoves[(moveList[i].GetMoveStartPiece()+(board.SideToMove*6))-1][moveList[i].GetMoveEnd()] += depth * depth
+			// }
+
 			alpha = score
 
-			pvTable[board.Ply][board.Ply] = bestMove
+			pvTable[board.Ply][board.Ply] = moveList[i]
 
 			for j := board.Ply + 1; j < pvLength[board.Ply+1]; j++ {
 				pvTable[board.Ply][j] = pvTable[board.Ply+1][j]
@@ -167,13 +170,12 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 				WriteTT(beta, depth, hashFlagBeta, bestMove)
 
 				if (moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0 {
-					if score > -MateValue && score < -MateScore {
-						mateKillerMoves[board.Ply] = moveList[i]
-					} else if killerMoves[0][board.Ply] != moveList[i] {
+					if killerMoves[0][board.Ply] != moveList[i] {
+						if score > MateScore {
+							mateKillerMoves[board.Ply] = killerMoves[1][board.Ply]
+						}
 						killerMoves[1][board.Ply] = killerMoves[0][board.Ply]
 						killerMoves[0][board.Ply] = moveList[i]
-					} else {
-						historyMoves[board.SideToMove][moveList[i].GetMoveStart()][moveList[i].GetMoveEnd()] += 1 << depth
 					}
 				}
 				// if i > 0 && (moveList[i].GetMoveFlags()&board.MoveCaptures) == 0 {

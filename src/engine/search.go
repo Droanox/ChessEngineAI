@@ -21,7 +21,7 @@ func Search(depth int, cb *board.ChessBoard) {
 
 	// reset killer moves and history moves
 	killerMoves = [2][board.MaxPly]board.Move{}
-	historyMoves = [2][64][64]int{}
+	// historyMoves = [12][64]int{}
 	// counterMoves = [2][64][64]board.Move{}
 
 	// reset principal variation

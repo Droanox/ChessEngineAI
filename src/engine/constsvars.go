@@ -36,7 +36,7 @@ var mateKillerMoves [board.MaxPly]board.Move
 // counterMoves is used to store the counter moves
 // var counterMoves [2][64][64]board.Move
 
-var historyMoves [2][64][64]int
+// var historyMoves [12][64]int
 
 ///////////////////////////////////////////////////////////////////
 // Aspiration windows
@@ -54,6 +54,8 @@ const StandardSearch int = 0
 const PVSSearch int = 1
 
 const NullMovePruningSearch int = 2
+
+const LMRSearch int = 3
 
 ///////////////////////////////////////////////////////////////////
 // Principal variation
@@ -115,7 +117,7 @@ const hashFlagAlpha int = 1
 const hashFlagBeta int = 2
 
 // hashSize is the size of the hash table
-const hashSize uint64 = 2 << 22 // default: 2 << 22 // Changeable by user
+const hashSize uint64 = 1 << 20 // default: 1 << 20 // Changeable by user
 
 // ttSize is the size of the transposition table
 var tt [hashSize]TranspositionTable
@@ -140,9 +142,9 @@ var IsStopped bool
 // General util
 ///////////////////////////////////////////////////////////////////
 
-const maxScore = 20000
+const maxScore = 100000
 
-const minScore = -20000
+const minScore = -maxScore
 
 const MateValue = (maxScore - 100)
 
@@ -150,7 +152,7 @@ const MateValue = (maxScore - 100)
 const MateScore = (MateValue - 100)
 
 // moveOrderOffset is used to offset the move ordering score
-const moveOrderOffset = 10000
+const moveOrderOffset = maxScore / 2
 
 // nodes is the number of nodes searched
 // This is used to print the number of nodes searched
