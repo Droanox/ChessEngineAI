@@ -43,6 +43,9 @@ func Eval(cb board.ChessBoard) int {
 		0: &cb.WhitePawns, 1: &cb.WhiteKnights, 2: &cb.WhiteBishops, 3: &cb.WhiteRooks, 4: &cb.WhiteQueen, 5: &cb.WhiteKing,
 		6: &cb.BlackPawns, 7: &cb.BlackKnights, 8: &cb.BlackBishops, 9: &cb.BlackRooks, 10: &cb.BlackQueen, 11: &cb.BlackKing,
 	}
+	var allPieceArr = []*uint64{
+		0: &cb.WhitePieces, 1: &cb.BlackPieces,
+	}
 
 	var side, square, gamephase int
 	var mg, eg [2]int
@@ -56,12 +59,13 @@ func Eval(cb board.ChessBoard) int {
 			eg[side] += tableEG[i][square]
 			gamephase += gamephaseInc[i]
 
-			if i == 0 || i == 6 {
+			switch i {
+			case 0, 6: // Pawns
 				// double pawn penalty
 				if board.BitCount(FileMasks[square]&*pieceBoard) > 1 {
 					mg[side] += doublePawnPenalty
 					eg[side] += doublePawnPenalty
-					// fmt.Println("Double pawn count on File:", "doublePawns", board.IndexToSquare[square], board.BitCount(FileMasks[square]&*pieceBoard))
+					// fmt.Println("Double count penalty on:", "doublePawns", board.IndexToSquare[square], doublePawnPenalty)
 				}
 				// isolated pawn penalty
 				if IsolatedMasks[square]&*pieceBoard == 0 {
@@ -70,12 +74,60 @@ func Eval(cb board.ChessBoard) int {
 					// fmt.Println("Isolated pawn penalty on:", board.IndexToSquare[square], isolatedPawnPenalty)
 				}
 				// Passed pawn bonus
-				if PassedMasks[side][square]&*pieceBoard == 0 {
-					mg[side] += PastPawnBonus[pastPawnBonusIndex[square^(56*side)]]
-					eg[side] += PastPawnBonus[pastPawnBonusIndex[square^(56*side)]]
-					// fmt.Println("Passed pawn bonus on:", board.IndexToSquare[square], PastPawnBonus[pastPawnBonusIndex[square^(56*side)]])
+				if PassedMasks[side][square]&*pieceArr[(1-side)*6] == 0 {
+					mg[side] += PastPawnBonus[(square^(56*side))/8]
+					eg[side] += PastPawnBonus[(square^(56*side))/8]
+					// fmt.Println("Passed pawn bonus on:", board.IndexToSquare[square], PastPawnBonus[(square^(56*side))/8])
 				}
+			case 1, 7: // Knights
+				// mobility bonus
+				score := board.BitCount(board.KnightAttacks[square]&^*allPieceArr[side]) - 4
+				mg[side] += score * knightMobility
+				eg[side] += score * knightMobility
+			case 2, 8: // Bishops
+				// mobility bonus
+				score := board.BitCount(board.GetBishopAttacks(square, cb.WhitePieces|cb.BlackPieces)) - 6
+				mg[side] += score * bishopMobility
+				eg[side] += score * bishopMobility
+			case 3, 9: // Rooks
+				// rook on open file bonus
+				if FileMasks[square]&(cb.WhitePawns|cb.BlackPawns) == 0 {
+					mg[side] += openFile[0]
+					eg[side] += openFile[0]
+					// fmt.Println("Rook on open file bonus on:", board.IndexToSquare[square], openFile)
+				}
+				// rook on semi open file bonus
+				if FileMasks[square]&*pieceArr[side*6] == 0 {
+					mg[side] += semiOpenFile[0]
+					eg[side] += semiOpenFile[0]
+					// fmt.Println("Rook on semi open file bonus on:", board.IndexToSquare[square], semiOpenFile)
+				}
+				// mobility bonus
+				score := board.BitCount(board.GetRookAttacks(square, cb.WhitePieces|cb.BlackPieces)) - 7
+				mg[side] += score * rookMobility[0]
+				eg[side] += score * rookMobility[1]
 
+			case 4, 10: // Queens
+				score := board.BitCount(board.GetQueenAttacks(square, cb.WhitePieces|cb.BlackPieces))
+				mg[side] += score
+				eg[side] += score
+			case 5, 11: // Kings
+				// king on open file penalty
+				if FileMasks[square]&(cb.WhitePawns|cb.BlackPawns) == 0 {
+					mg[side] -= openFile[1]
+					eg[side] -= openFile[2]
+					// fmt.Println("King on open file penalty on:", board.IndexToSquare[square], openFile)
+				}
+				// king on semi open file penalty
+				if FileMasks[square]&*pieceArr[side*6] == 0 {
+					mg[side] -= semiOpenFile[1]
+					eg[side] -= semiOpenFile[2]
+					// fmt.Println("King on semi open file penalty on:", board.IndexToSquare[square], semiOpenFile)
+				}
+				// king safety bonus
+				score := board.BitCount(board.KingAttacks[square]&*allPieceArr[side]) * kingSafetyBonus
+				mg[side] += score
+				eg[side] += score
 			}
 		}
 	}

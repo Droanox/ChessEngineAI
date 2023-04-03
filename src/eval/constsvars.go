@@ -22,22 +22,51 @@ var PassedMasks = [2][64]uint64{}
 // Pawn
 ///////////////////////////////////////////////////////////////////
 
-var pastPawnBonusIndex = [64]int{
-	0, 0, 0, 0, 0, 0, 0, 0,
-	1, 1, 1, 1, 1, 1, 1, 1,
-	2, 2, 2, 2, 2, 2, 2, 2,
-	3, 3, 3, 3, 3, 3, 3, 3,
-	4, 4, 4, 4, 4, 4, 4, 4,
-	5, 5, 5, 5, 5, 5, 5, 5,
-	6, 6, 6, 6, 6, 6, 6, 6,
-	7, 7, 7, 7, 7, 7, 7, 7,
-}
-
+// if there is a doubled pawn, subtract this value from the evaluation
 var doublePawnPenalty int = -10
 
-var isolatedPawnPenalty int = -20
+// If there is an isolated pawn, subtract this value from the evaluation
+var isolatedPawnPenalty int = -10
 
-var PastPawnBonus = [8]int{0, 10, 30, 50, 70, 100, 150, 200}
+// If there is a past pawn, add this value to the evaluation
+var PastPawnBonus = [8]int{0, 5, 10, 20, 35, 60, 100, 200}
+
+///////////////////////////////////////////////////////////////////
+// Knight
+///////////////////////////////////////////////////////////////////
+
+// Mobility bonus for knights
+var knightMobility int = 4
+
+///////////////////////////////////////////////////////////////////
+// Bishop
+///////////////////////////////////////////////////////////////////
+
+// Mobility bonus for bishops
+var bishopMobility int = 5
+
+///////////////////////////////////////////////////////////////////
+// Rook and King
+///////////////////////////////////////////////////////////////////
+
+// if there is a semi-open file, add this value to the evaluation
+var semiOpenFile = [3]int{10, 15, 5}
+
+// if there is an open file, add this value to the evaluation
+var openFile = [3]int{20, 30, 5}
+
+// Mobility bonus for rooks
+var rookMobility = [2]int{2, 4}
+
+// bonus if king is protected
+var kingSafetyBonus = 6
+
+///////////////////////////////////////////////////////////////////
+// Queen
+///////////////////////////////////////////////////////////////////
+
+// Mobility bonus for queens
+// var queenMobility = [2]int{2, 4}
 
 ///////////////////////////////////////////////////////////////////
 // Piece and square values
