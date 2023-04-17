@@ -57,7 +57,7 @@ func BitScanForward(bitboard uint64) int {
 
 // GetPieceType returns the piece type on a square
 func (cb ChessBoard) GetPieceType(square int) int {
-	indexMask := indexMasks[square]
+	indexMask := IndexMasks[square]
 	switch {
 	case (cb.WhitePawns|cb.BlackPawns)&indexMask != EmptyBoard:
 		return Pawn
@@ -76,7 +76,7 @@ func (cb ChessBoard) GetPieceType(square int) int {
 }
 
 ///////////////////////////////////////////////////////////////////
-// Repetition
+// Repetition / Draw
 ///////////////////////////////////////////////////////////////////
 
 func IsRepetition() bool {
@@ -86,6 +86,17 @@ func IsRepetition() bool {
 		}
 	}
 	return false
+}
+
+func IsDraw(cb ChessBoard) bool {
+	if cb.WhitePawns|cb.BlackPawns|cb.WhiteRooks|cb.BlackRooks|cb.WhiteQueen|cb.BlackQueen == 0 && !MoreThanOne(cb.WhiteKnights|cb.BlackKnights|cb.WhiteBishops|cb.BlackBishops) {
+		return true
+	}
+	return false
+}
+
+func MoreThanOne(bitboard uint64) bool {
+	return bitboard != 0 && (bitboard-1)&bitboard != 0
 }
 
 ///////////////////////////////////////////////////////////////////
