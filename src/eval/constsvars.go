@@ -9,78 +9,122 @@ import "github.com/Droanox/ChessEngineAI/src/board"
 // Bitboard masks for files on the chessboard, index by square
 var FileMasks = [64]uint64{}
 
+// Bitboard masks for the king
+var KingFileMasks = [64]uint64{}
+
 // Bitboard masks for ranks on the chessboard, index by square
 var RankMasks = [64]uint64{}
 
+// Bitboard masks for partial file masks, index by square
+var PartialMasks = [2][64]uint64{}
+
+// Bitboard masks for king zones, index by square
+var KingZoneMasks = [2][64]uint64{}
+
 // Isolated pawn masks, index by square
-var IsolatedMasks = [64]uint64{}
+var EastIsolatedMasks = [64]uint64{}
+var WestIsolatedMasks = [64]uint64{}
 
 // Passed pawn masks, index by sidetomove and by square
 var PassedMasks = [2][64]uint64{}
+
+var KingSquares = [2][64]uint64{}
 
 ///////////////////////////////////////////////////////////////////
 // Pawn
 ///////////////////////////////////////////////////////////////////
 
 // if there is a doubled pawn, subtract this value from the evaluation
-var doublePawnPenalty int = -10
+var doublePawnPenaltyHalf int = 15
 
 // If there is an isolated pawn, subtract this value from the evaluation
-var isolatedPawnPenalty int = -10
+var isolatedPawnPenaltyHalf = [2]int{13, 4}
 
 // If there is a past pawn, add this value to the evaluation
-var PastPawnBonus = [8]int{0, 5, 10, 20, 35, 60, 100, 200}
+var pastPawnBonus = [8]int{0, 3, 11, 26, 37, 55, 103, 158}
 
 ///////////////////////////////////////////////////////////////////
 // Knight
 ///////////////////////////////////////////////////////////////////
 
 // Mobility bonus for knights
-var knightMobility int = 4
+var knightMobility int = 5
+
+// The less pawns there are, the less knights are worth
+var knightPawnPenalty int = 4
 
 ///////////////////////////////////////////////////////////////////
 // Bishop
 ///////////////////////////////////////////////////////////////////
 
 // Mobility bonus for bishops
-var bishopMobility int = 5
+var bishopMobility int = 6
+
+// if there is a bishop pair, add this value to the evaluation
+var bishopPairBonus int = 15
 
 ///////////////////////////////////////////////////////////////////
-// Rook and King
+// Rooks
 ///////////////////////////////////////////////////////////////////
 
 // if there is a semi-open file, add this value to the evaluation
-var semiOpenFile = [3]int{10, 15, 5}
+var semiOpenFile = 7
 
 // if there is an open file, add this value to the evaluation
-var openFile = [3]int{20, 30, 5}
+var openFile = 13
+
+// count the number of queens and rooks on the same file, and award this bonus
+var stackedPieceBonus = 6
+
+// if there is a rook on the seventh rank, add this value to the evaluation
+var rookOnSeventh = 8
+
+// The less pawns there are, the more rooks are worth
+var rookPawnBonus int = 4
 
 // Mobility bonus for rooks
 var rookMobility = [2]int{2, 4}
 
-// bonus if king is protected
-var kingSafetyBonus = 6
+// See where the pawns are for the other side
+var rook7thRank = [2]uint64{
+	0: board.Rank7On, 1: board.Rank2On,
+}
+
+///////////////////////////////////////////////////////////////////
+// King
+///////////////////////////////////////////////////////////////////
+
+// Number of attacks weight
+var numberOfAttacksWeight = [7]int{0, 50, 75, 88, 94, 97, 99}
+
+// Multiply squares by this weight
+var attackerWeights = [5]int{15, 17, 17, 35, 70}
+
+// Multiply pawn squares by this weight
+var pawnMultiplier = [2]int{14, 0}
+
+// Replace king wiht a queen, and see how many squares it sees, multiply by this value
+var kingTropismPenaltyMultiplier = 4
 
 ///////////////////////////////////////////////////////////////////
 // Queen
 ///////////////////////////////////////////////////////////////////
 
-// Mobility bonus for queens
-// var queenMobility = [2]int{2, 4}
-
 ///////////////////////////////////////////////////////////////////
 // Piece and square values
 ///////////////////////////////////////////////////////////////////
 
-// Values from http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19
+// Changes every time eval is called
+var PawnValue int = 82
 
+// Values from http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19
 var (
-	pieceValuesMG = [6]int{82, 337, 365, 477, 1025, 0}
-	pieceValuesEG = [6]int{94, 281, 297, 512, 936, 0}
+	PieceValuesMG = [6]int{82, 337, 365, 477, 1025, 3000}
+	PieceValuesEG = [6]int{94, 281, 297, 512, 936, 3000}
 )
 
 var (
-	gamephaseInc = [12]int{0, 0, 1, 1, 1, 1, 2, 2, 4, 4, 0, 0}
+	gamephaseInc = [12]int{0, 1, 1, 2, 4, 0, 0, 1, 1, 2, 4, 0}
 	tableMG      = [12][64]int{}
 	tableEG      = [12][64]int{}
 )
@@ -242,4 +286,8 @@ var piecesEG = [6][64]int{
 var pieceToColour = []int{
 	0: board.White, 1: board.White, 2: board.White, 3: board.White, 4: board.White, 5: board.White,
 	6: board.Black, 7: board.Black, 8: board.Black, 9: board.Black, 10: board.Black, 11: board.Black,
+}
+
+var offsetBySide = []int{
+	board.White: +8, board.Black: -8,
 }
