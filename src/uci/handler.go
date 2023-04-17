@@ -21,9 +21,7 @@ func scan(commands string, cb *board.ChessBoard) {
 	case "ucinewgame":
 		handleUcinewgame(cb)
 	case "position":
-		isReady = false
 		handlePosition(commands, cb)
-		isReady = true
 	case "go":
 		handleGo(commands, cb)
 	default:
@@ -47,9 +45,12 @@ func handleUcinewgame(cb *board.ChessBoard) {
 	*cb = board.ChessBoard{}
 
 	engine.ClearTT()
+
+	firstMove = true
 }
 
 func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
+	isReady = false
 	posCommands := strings.Fields(cmd)
 	movesIndex := strings.Index(cmd, "moves")
 
@@ -58,9 +59,11 @@ func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
 		cb.ParseFen(board.InitialPositionFen)
 	case "fen":
 		if movesIndex == -1 {
-			err = cb.ParseFen(cmd[13:])
+			position = cmd[13:]
+			err = cb.ParseFen(position)
 		} else {
-			err = cb.ParseFen(cmd[13 : movesIndex-1])
+			position = cmd[13 : movesIndex-1]
+			err = cb.ParseFen(position)
 		}
 	default:
 		fmt.Println("Position not found, using default position")
@@ -76,7 +79,7 @@ func handlePosition(cmd string, cb *board.ChessBoard) (err error) {
 
 	hasParsed = true
 
-	// engine.ClearTT()
+	isReady = true
 
 	return err
 }
@@ -92,6 +95,9 @@ func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 
 	if len(goCommands) > 1 {
 		for i, command := range goCommands {
+			if !(len(goCommands) > i+1) {
+				break
+			}
 			switch command {
 			case "wtime":
 				if board.SideToMove == board.White {
@@ -109,6 +115,10 @@ func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 				stopTime, err = strconv.Atoi(goCommands[i+1])
 				engine.TimeControl = true
 				engine.StopTime = int64(stopTime)
+			case "perft":
+				depth, err = strconv.Atoi(goCommands[i+1])
+				board.PerftTest(position, depth)
+				return
 			}
 		}
 	}
@@ -121,10 +131,18 @@ func handleGo(cmd string, cb *board.ChessBoard) (err error) {
 		engine.TimeControl = true
 
 		engine.StopTime = timeLeft.Milliseconds()/int64(movesToGo) - ((timeLeft.Milliseconds() / int64(movesToGo)) / 10)
+		if firstMove && movesToGo > 5 {
+			engine.StopTime = engine.StopTime * 2
+		}
 	}
 	engine.Search(depth, cb)
+	firstMove = false
 
-	return err
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return
 }
 
 func handleMakeMove(move string, cb *board.ChessBoard) bool {

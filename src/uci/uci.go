@@ -10,19 +10,6 @@ import (
 	"github.com/Droanox/ChessEngineAI/src/eval"
 )
 
-// validCommands is a map of valid commands
-var validCommands = map[string]bool{"uci": true, "isready": true, "ucinewgame": true, "position": true, "ponderhit": true, "go": true}
-
-// isReady is a bool to check if the engine is ready
-var isReady bool = true
-
-// hasParsed is a bool to check if the engine has parsed the position
-// if not, it will use the initial position
-var hasParsed bool = false
-
-// chMax is the maximum size of the channel
-var chMax int = 10
-
 func Run() {
 	cb := board.ChessBoard{}
 	cb.Init()
@@ -76,3 +63,22 @@ func scanLine(cmdCh chan string, okayToScan *bool) {
 		}
 	}
 }
+
+// validCommands is a map of valid commands
+var validCommands = map[string]bool{"uci": true, "isready": true, "ucinewgame": true, "position": true, "ponderhit": true, "go": true}
+
+// isReady is a bool to check if the engine is ready
+var isReady bool = true
+
+// hasParsed is a bool to check if the engine has parsed the position
+// if not, it will use the initial position
+var hasParsed bool = false
+
+// chMax is the maximum size of the channel
+var chMax int = 10
+
+// Take twice as long on the first move to allow the engine to think more
+var firstMove bool = true
+
+// Store the position, used in some commands
+var position string = board.InitialPositionFen
