@@ -6,51 +6,66 @@ import (
 )
 
 // PerftTest runs a series of perft tests to verify that the move generation is working correctly
-func (cb ChessBoard) PerftTest() {
+func PerftTest(fen string, depth int) {
+	var totalNodes int64 = 0
+
+	cb := ChessBoard{}
 	cb.Init()
-	for _, test := range PerftTests {
-		cb.CopyBoard()
+	cb.ParseFen(fen)
 
-		cb.ParseFen(test.FEN)
-		cb.perftDriver(test.depth)
-		fmt.Println(test.Name, "\nNodes searched:", nodes)
-		if nodes != test.nodes {
-			fmt.Println("ERROR!")
+	var moveList = []Move{}
+	cb.GenerateMoves(&moveList)
+
+	for i := 0; i < len(moveList); i++ {
+		if !cb.MakeMove(moveList[i]) {
+			continue
 		}
+		cb.perftDriver(depth - 1)
+		fmt.Print(IndexToSquare[moveList[i].GetMoveStart()]+IndexToSquare[moveList[i].GetMoveEnd()], ": ", nodes, "\n")
+		totalNodes += nodes
 		nodes = 0
-
 		cb.MakeBoard()
 	}
+	fmt.Println("\nTotal nodes:", totalNodes)
+	/*
+		for _, test := range PerftTests {
+			cb.CopyBoard()
+
+			cb.ParseFen(test.FEN)
+			cb.perftDriver(test.depth)
+			fmt.Println(test.Name, "\nNodes searched:", nodes)
+			if nodes != test.nodes {
+				fmt.Println("ERROR!")
+			}
+			nodes = 0
+
+			cb.MakeBoard()
+		}
+	*/
 }
 
-// PerftTestTimer is similar to PerftTest but also prints the time it took to run the test
-func (cb ChessBoard) PerftTestTimer() {
+// PerftTestEXTRA is similar to PerftTest but runs through a list of tests and has a timer.
+func PerftTestEXTRA() {
+	cb := ChessBoard{}
 	cb.Init()
-	for _, test := range PerftTests {
+	for i, test := range PerftTests {
 		start := time.Now()
 		cb.CopyBoard()
 
 		cb.ParseFen(test.FEN)
 		cb.perftDriver(test.depth)
 		elapsed := time.Since(start)
-		fmt.Println(test.Name, "\nNodes searched:", nodes, "\nTime elapsed:", elapsed)
+		fmt.Print(test.Name, "\nFen: ", test.FEN, "\nNodes searched: ", nodes, "\nTime elapsed: ", elapsed, "\n\n")
 		if nodes != test.nodes {
-			fmt.Println("ERROR!", nodes, "!=", test.nodes)
+			fmt.Print("ERROR!\nReceived: ", nodes, "\nNeeded:   ", test.nodes)
+			// New line after every test, stop before the last test
+			if i < len(PerftTests)-1 {
+				fmt.Print("\n\n")
+			}
 		}
 		nodes = 0
 
 		cb.MakeBoard()
-		// Uncomment this to check the hash after each test
-		/*
-			var checkHash uint64 = GenHash(cb)
-			if checkHash != HashKey {
-				cb.PrintChessBoard()
-				fmt.Print("MakeBoard: Hash mismatch\n")
-				fmt.Printf("%0x    Received\n", checkHash)
-				fmt.Printf("%0x    Expected\n", HashKey)
-				os.Exit(1)
-			}
-		*/
 	}
 	fmt.Println()
 }
