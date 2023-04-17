@@ -166,13 +166,13 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 			// get start square (next bit)
 			start = BitScanForward(bitboard)
 			if !isBitOn(allPieces, start+8) {
-				if (indexMasks[start] & Rank7On) != EmptyBoard {
+				if (IndexMasks[start] & Rank7On) != EmptyBoard {
 					// promotion
 					promotePiece(moveList, start, start+8, EmptyPiece, MoveQuiet)
 				} else {
 					// single pawn push
 					AddMove(moveList, EncodeMove(start, start+8, Pawn, EmptyPiece, MoveQuiet))
-					if ((indexMasks[start] & Rank2On) != EmptyBoard) && !isBitOn(allPieces, start+16) {
+					if ((IndexMasks[start] & Rank2On) != EmptyBoard) && !isBitOn(allPieces, start+16) {
 						// double pawn push
 						AddMove(moveList, EncodeMove(start, start+16, Pawn, EmptyPiece, MoveDoublePawn))
 					}
@@ -181,7 +181,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 			for attacks := PawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
 				// get end square (next bit)
 				end = BitScanForward(attacks)
-				if (indexMasks[start] & Rank7On) != EmptyBoard {
+				if (IndexMasks[start] & Rank7On) != EmptyBoard {
 					// promotion capture
 					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
 				} else {
@@ -225,13 +225,13 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 			// get start square (next bit)
 			start = BitScanForward(bitboard)
 			if !isBitOn(allPieces, start-8) {
-				if (indexMasks[start] & Rank2On) != EmptyBoard {
+				if (IndexMasks[start] & Rank2On) != EmptyBoard {
 					// promotion
 					promotePiece(moveList, start, start-8, EmptyPiece, MoveQuiet)
 				} else {
 					// single pawn push
 					AddMove(moveList, EncodeMove(start, start-8, Pawn, EmptyPiece, MoveQuiet))
-					if ((indexMasks[start] & Rank7On) != EmptyBoard) && !isBitOn(allPieces, start-16) {
+					if ((IndexMasks[start] & Rank7On) != EmptyBoard) && !isBitOn(allPieces, start-16) {
 						// double pawn push
 						AddMove(moveList, EncodeMove(start, start-16, Pawn, EmptyPiece, MoveDoublePawn))
 					}
@@ -240,7 +240,7 @@ func (cb *ChessBoard) GenerateMoves(moveList *[]Move) {
 			for attacks := PawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
 				// get end square (next bit)
 				end = BitScanForward(attacks)
-				if (indexMasks[start] & Rank2On) != EmptyBoard {
+				if (IndexMasks[start] & Rank2On) != EmptyBoard {
 					// promotion capture
 					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
 				} else {
@@ -387,7 +387,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 			for attacks := PawnAttacks[White][start] & cb.BlackPieces; attacks != EmptyBoard; {
 				// Get the end square (next bit)
 				end = BitScanForward(attacks)
-				if (indexMasks[start] & Rank7On) != EmptyBoard {
+				if (IndexMasks[start] & Rank7On) != EmptyBoard {
 					// promotion capture
 					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
 				} else {
@@ -413,7 +413,7 @@ func (cb *ChessBoard) GenerateCaptures(moveList *[]Move) {
 			for attacks := PawnAttacks[Black][start] & cb.WhitePieces; attacks != EmptyBoard; {
 				// Get the end square (next bit)
 				end = BitScanForward(attacks)
-				if (indexMasks[start] & Rank2On) != EmptyBoard {
+				if (IndexMasks[start] & Rank2On) != EmptyBoard {
 					// promotion capture
 					promotePiece(moveList, start, end, cb.GetPieceType(end), MoveCaptures)
 				} else {
