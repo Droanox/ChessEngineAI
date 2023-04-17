@@ -21,13 +21,13 @@ func Search(depth int, cb *board.ChessBoard) {
 
 	// reset killer moves and history moves
 	killerMoves = [2][board.MaxPly]board.Move{}
-	// historyMoves = [12][64]int{}
 	// counterMoves = [2][64][64]board.Move{}
+	hhScore = [64][64]int{}
+	bfScore = [64][64]int{}
 
 	// reset principal variation
 	pvTable = [board.MaxPly][board.MaxPly]board.Move{}
 	pvLength = [board.MaxPly]int{}
-	// pvFollowed = false
 
 	// start timer
 	start = time.Now()
@@ -41,6 +41,8 @@ func Search(depth int, cb *board.ChessBoard) {
 	go listenForStop(isTimerOn)
 
 	for currDepth := 1; currDepth <= depth; currDepth++ {
+		// pvFollowed = true
+
 		// perform negamax search
 		var score int = alphabeta(alpha, beta, currDepth, StandardSearch, cb)
 

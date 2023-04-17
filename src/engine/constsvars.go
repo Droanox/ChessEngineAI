@@ -20,7 +20,17 @@ var MVV_LVA = [7][7]int{
 	{0, 35, 34, 33, 32, 31, 30},
 	{0, 45, 44, 43, 42, 41, 40},
 	{0, 55, 54, 53, 52, 51, 50},
-	{0, 65, 64, 63, 62, 61, 60},
+	{0, 00, 00, 00, 00, 00, 00},
+}
+
+var MVV_LVA_TEST = [7][7]int{
+	{0, 00, 00, 00, 00, 00, 00},
+	{0, 3000, 2745, 2717, 2605, 2057, 82},
+	{0, 3255, 3000, 2972, 2860, 2312, 337},
+	{0, 3283, 3028, 3000, 2888, 2340, 365},
+	{0, 3395, 3140, 3112, 3000, 2452, 477},
+	{0, 3943, 3688, 3660, 3548, 3000, 1025},
+	{0, 00, 00, 00, 00, 00, 00},
 }
 
 // killerMoves is used to store the killer moves
@@ -31,12 +41,13 @@ var killerMoves [2][board.MaxPly]board.Move
 
 // mateKillerMoves is used to store the killer moves
 // that are used to find mate
-var mateKillerMoves [board.MaxPly]board.Move
+// var mateKillerMoves [board.MaxPly]board.Move
 
 // counterMoves is used to store the counter moves
-// var counterMoves [2][64][64]board.Move
+// var counterMoves [13][64]board.Move
 
-// var historyMoves [12][64]int
+var hhScore [64][64]int
+var bfScore [64][64]int
 
 ///////////////////////////////////////////////////////////////////
 // Aspiration windows
@@ -49,12 +60,16 @@ const aspirationWindow int = 50 // Changeable by user
 // Alpha beta search flags
 ///////////////////////////////////////////////////////////////////
 
+// return flag for all other non interesting cases
 const StandardSearch int = 0
 
+// return flag for principal variation search
 const PVSSearch int = 1
 
+// return flag for null move pruning search
 const NullMovePruningSearch int = 2
 
+// return flag for late move reduction search
 const LMRSearch int = 3
 
 ///////////////////////////////////////////////////////////////////
@@ -83,7 +98,7 @@ var pvTable [board.MaxPly][board.MaxPly]board.Move
 
 // fullDepthMoves is the number of moves searched before
 // late move reduction is used
-const fullDepthMoves int = 4 // Changeable by user
+const fullDepthMoves int = 2 // Changeable by user
 
 // reductionLimit is the maximum number of reductions
 // that can be performed
@@ -95,10 +110,10 @@ const reductionLimit int = 3 // Changeable by user
 
 // R is the depth reduction factor for null move pruning
 // This is the number of plies to reduce the depth by
-const nullMoveReduction int = 2 // Changeable by user
+// const nullMoveReduction int = 3 // Changeable by user
 
 // nullMoveDepth is the depth at which null move pruning is used
-const nullMoveDepth int = 3 // Changeable by user
+const nullMoveDepth int = 5 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Transposition table
@@ -117,7 +132,7 @@ const hashFlagAlpha int = 1
 const hashFlagBeta int = 2
 
 // hashSize is the size of the hash table
-const hashSize uint64 = 1 << 20 // default: 1 << 20 // Changeable by user
+const hashSize uint64 = 1 << 22 // default: 1 << 22 // Changeable by user
 
 // ttSize is the size of the transposition table
 var tt [hashSize]TranspositionTable
@@ -146,10 +161,10 @@ const maxScore = 100000
 
 const minScore = -maxScore
 
-const MateValue = (maxScore - 100)
+const MateValue = (maxScore - 1000)
 
 // MateScore is the score used to determine if a move is a mate
-const MateScore = (MateValue - 100)
+const MateScore = (MateValue - 1000)
 
 // moveOrderOffset is used to offset the move ordering score
 const moveOrderOffset = maxScore / 2
@@ -160,3 +175,6 @@ const moveOrderOffset = maxScore / 2
 // This is reset every time a search is performed
 // and is incremented every time a node is searched
 var nodes int
+
+// store static evals to check if position is getting better or worse as search progresses
+// var staticEvalHistory [board.MaxPly]int

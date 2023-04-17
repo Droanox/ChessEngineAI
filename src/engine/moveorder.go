@@ -4,48 +4,45 @@ import (
 	"github.com/Droanox/ChessEngineAI/src/board"
 )
 
+// move ordering
+// https://www.chessprogramming.org/Move_Ordering
+// Give each move a score depending on the type of move
 func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
 	moves := (*movelist)
 
-	/*for i := 0; i < len(moves); i++ {
-	} */ /*
-
-		if pvFollowed {
-			pvFollowed = false
-			for i := 0; i < len(moves); i++ {
-				if moves[i].Move == pvTable[0][board.Ply].Move {
-					moves[i].Score = moveOrderOffset + 150
-					pvFollowed = true
-					return
-				}
+	for i := 0; i < len(moves); i++ {
+		flags := moves[i].GetMoveFlags()
+		switch {
+		case moves[i].Move == bestMove.Move:
+			moves[i].Score = moveOrderOffset + 72
+		case flags == board.MoveQueenPromotionCapture:
+			moves[i].Score = moveOrderOffset + 71
+		case flags == board.MoveQueenPromotion:
+			moves[i].Score = moveOrderOffset + 70
+		case flags&board.MoveCaptures != 0:
+			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
+		case moves[i].Move == killerMoves[0][board.Ply].Move:
+			moves[i].Score = moveOrderOffset - 1
+		case moves[i].Move == killerMoves[1][board.Ply].Move:
+			moves[i].Score = moveOrderOffset - 2
+		case flags == board.MoveKingCastle:
+			moves[i].Score = moveOrderOffset - 3
+		case flags == board.MoveQueenCastle:
+			moves[i].Score = moveOrderOffset - 4
+		default:
+			bf := bfScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()]
+			if bf > 0 {
+				moves[i].Score = hhScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()] / bf
 			}
 		}
-	*/
-	for i := 0; i < len(moves); i++ {
-		if moves[i].Move == bestMove.Move {
-			moves[i].Score = moveOrderOffset + 100
-		} else if moves[i].Move == mateKillerMoves[board.Ply].Move {
-			moves[i].Score = moveOrderOffset + 90
-		} else if moves[i].GetMoveFlags()&board.MoveCaptures != 0 {
-			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
-		} else {
-			if moves[i].Move == killerMoves[0][board.Ply].Move {
-				moves[i].Score = moveOrderOffset - 10
-			} else if moves[i].Move == killerMoves[1][board.Ply].Move {
-				moves[i].Score = moveOrderOffset - 20
-			} // else {
-			// moves[i].Score = historyMoves[(moves[i].GetMoveStartPiece()+(board.SideToMove*6))-1][moves[i].GetMoveEnd()]
-			// }
-
-			// if i > 0 && counterMoves[board.SideToMove][moves[i-1].GetMoveStart()][moves[i-1].GetMoveEnd()].Move == moves[i].Move {
-			// moves[i].Score += 1
-			// }
-		}
+		// if board.Ply > 0 && counterMoves[prevMoves[board.Ply-1].GetMoveStartPiece()+(6*board.SideToMove)][prevMoves[board.Ply-1].GetMoveEnd()].Move == moves[i].Move {
+		// moves[i].Score += 1
+		// }
 	}
 }
 
 func pickMove(movelist *[]board.Move, currentIndex int) {
-	moves := (*movelist)
+	var moves = (*movelist)
 
 	// Move through the list and if there's a move greater than the current Index
 	// swap the move, keep doing this until a cut off occurs

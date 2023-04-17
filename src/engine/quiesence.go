@@ -6,8 +6,8 @@ import (
 )
 
 func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
-	// check if the position is a repetition
-	if board.Ply > 0 && board.IsRepetition() {
+	// apply 3 move repetition rule and 50 move rule
+	if board.Ply > 0 && board.IsRepetition() || board.HalfMoveClock >= 100 {
 		return 0
 	}
 
@@ -15,6 +15,7 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 	nodes++
 
 	var standPat int = eval.Eval(*cb)
+
 	// found a better move
 	if standPat > alpha {
 		alpha = standPat
@@ -35,6 +36,7 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 		if !cb.MakeCapture(moveList[i]) {
 			continue
 		}
+
 		var score int = -quiescence(-beta, -alpha, cb)
 		cb.MakeBoard()
 
@@ -53,35 +55,7 @@ func quiescence(alpha int, beta int, cb *board.ChessBoard) int {
 			}
 		}
 	}
+
 	// fails low
 	return alpha
-}
-
-func ZWSearch(beta int, depth int, cb *board.ChessBoard) int {
-	if depth == 0 {
-		return quiescence(beta-1, beta, cb)
-	}
-
-	var moveList = []board.Move{}
-	cb.GenerateMoves(&moveList)
-
-	for i := 0; i < len(moveList); i++ {
-		if !cb.MakeMove(moveList[i]) {
-			continue
-		}
-
-		var score int = -ZWSearch(1-beta, depth-1, cb)
-		cb.MakeBoard()
-
-		// check if the search should be stopped, time is checked concurrently
-		if IsStopped {
-			return 0
-		}
-
-		// found a better move
-		if score >= beta {
-			return beta
-		}
-	}
-	return beta - 1
 }

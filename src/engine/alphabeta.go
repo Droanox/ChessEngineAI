@@ -11,26 +11,12 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 	// pvLength[board.Ply] is used to store the length of the principal variation
 	pvLength[board.Ply] = board.Ply
 
-	if board.Ply > 0 && board.IsRepetition() {
-		return 0
-	}
-
-	// hashFlag is used to store the type of the hash entry
-	// we dont know the type yet, so we set it to hashFlagAlpha
-	var hashFlag int = hashFlagAlpha
-
-	// score is used to store the eval of the position
-	var score int
-
 	// pvNode is used to determine if the node is a PV node
 	var pvNode bool = beta-alpha > 1
 
-	// bestMove is used to store the best move
-	var bestMove board.Move = board.Move{}
-
-	// Transposition Table (TT)
-	if score := ReadTT(alpha, beta, depth, &bestMove); score != noHash && !pvNode {
-		return score
+	// apply 3 move repetition rule and 50 move rule
+	if board.Ply > 0 && board.IsRepetition() || board.HalfMoveClock >= 100 {
+		return 0
 	}
 
 	// when the depth is 0, we call quiescence search to search for captures
@@ -40,6 +26,18 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 
 	// increment the number of nodes searched
 	nodes++
+
+	if board.IsDraw(*cb) {
+		return 0
+	}
+
+	// Check if the side to move is in check
+	// if it is, we increase the depth by 1 Check Extension
+	// https://www.chessprogramming.org/Check_Extensions
+	var isChecked bool = cb.IsInCheck()
+	if isChecked {
+		depth++
+	}
 
 	// Mate Distance Pruning (MDP)
 	// https://www.chessprogramming.org/Mate_Distance_Pruning
@@ -53,22 +51,48 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 		return alpha
 	}
 
-	// Check if the side to move is in check
-	// if it is, we increase the depth by 1 Check Extension
-	// https://www.chessprogramming.org/Check_Extensions
-	var isChecked bool = cb.IsInCheck()
-	if isChecked {
-		depth++
+	// hashFlag is used to store the type of the hash entry
+	// we dont know the type yet, so we set it to hashFlagAlpha
+	var hashFlag int = hashFlagAlpha
+
+	// score is used to store the eval of the position
+	var score int
+
+	// bestMove is used to store the best move
+	var bestMove board.Move = board.Move{}
+
+	// Transposition Table (TT)
+	if score = ReadTT(alpha, beta, depth, &bestMove); score != noHash && !pvNode {
+		return score
 	}
 
 	// legalMovesNum is used to determine if the position is a checkmate or a stalemate
 	var legalMoveAvailable bool = false
 
+	// staticEval is used to store the static evaluation of the position (used for pruning)
+	var staticEval int = eval.Eval(*cb)
+
+	// Reverse Futility Pruning
+	// https://www.chessprogramming.org/Reverse_Futility_Pruning
+	if !pvNode && !isChecked && depth <= 5 {
+		var score = staticEval - (eval.PawnValue * depth)
+		if score >= beta {
+			return staticEval
+		}
+	}
+
+	// reset old killer moves
+	if board.Ply >= 2 {
+		killerMoves[1][board.Ply-2] = board.Move{}
+		killerMoves[0][board.Ply-2] = board.Move{}
+	}
+
 	// Null Move Pruning (NMP)
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if (depth >= nullMoveDepth) && (!isChecked) && !eval.IsEndGame(*cb) && board.Ply > 0 && flag != NullMovePruningSearch {
+	if (depth >= nullMoveDepth) && (!isChecked) && !eval.IsEndGame(*cb) && !pvNode && flag != NullMovePruningSearch && staticEval >= beta {
 		cb.MakeMoveNull()
-		score = -alphabeta(-beta, -beta+1, depth-1-nullMoveReduction, NullMovePruningSearch, cb)
+		// vary reduction base on depth, idea from the CounterGo chess engine
+		score = -alphabeta(-beta, -beta+1, depth-(3+(depth/6)), NullMovePruningSearch, cb)
 		cb.MakeBoard()
 
 		// check if the search should be stopped, time is checked concurrently
@@ -76,7 +100,7 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 			return 0
 		}
 
-		if score >= beta {
+		if score >= beta && (score > -MateScore) {
 			return beta
 		}
 	}
@@ -90,10 +114,31 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 	// https://www.chessprogramming.org/Move_Ordering
 	scoreMoves(&moveList, bestMove)
 
+	// set the score to the lowest possible value
+	score = minScore
+
+	// isQuiet is used to determine if the move is a quiet move
+	var isSafe bool
+
 	// search through the moves
 	for i := 0; i < len(moveList); i++ {
+		// pick out the next highest scored move
 		pickMove(&moveList, i)
 
+		// check if the move is a capture or a promotion (KnightPromotionCapture counts as both)
+		isSafe = moveList[i].GetMoveFlags()&board.MoveKnightPromotionCapture == 0
+
+		// futility pruning
+		// https://www.chessprogramming.org/Futility_Pruning
+		if depth <= 5 &&
+			isSafe &&
+			!isChecked &&
+			score > -MateScore &&
+			staticEval+(eval.PawnValue*(depth+1)) <= alpha {
+			continue
+		}
+
+		// make the move
 		if !cb.MakeMove(moveList[i]) {
 			continue
 		}
@@ -101,37 +146,33 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 		// change legalmove for checkmate and stalemate detection
 		legalMoveAvailable = true
 
-		// Principal Variation Search (PVS) and Late Move Reduction (LMR)
-		// https://www.chessprogramming.org/Principal_Variation_Search
-		// https://www.chessprogramming.org/Late_Move_Reductions
 		// full depth search
 		if i == 0 {
 			score = -alphabeta(-beta, -alpha, depth-1, StandardSearch, cb)
 		} else {
 			// if the move satisfies the LMR conditions, we search deeper
 			// LMR
+			// https://www.chessprogramming.org/Late_Move_Reductions
 			if (depth >= reductionLimit) &&
 				(i >= fullDepthMoves) &&
-				((moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0) &&
+				isSafe &&
 				!isChecked &&
 				!cb.IsInCheck() &&
-				killerMoves[0][board.Ply] != moveList[i] &&
-				killerMoves[1][board.Ply] != moveList[i] {
+				!(pvNode && (flag == PVSSearch || flag == LMRSearch)) {
 				reduction := int(math.Sqrt(float64(depth-1)) + math.Sqrt(float64(i-1)))
 				if pvNode {
-					reduction = 2
+					reduction -= 2
 				}
-				reduction = Max(0, Min(reduction, depth-1))
+				reduction = Max(0, Min(reduction, depth-2))
 				score = -alphabeta(-alpha-1, -alpha, depth-reduction, LMRSearch, cb)
-				// score = -alphabeta(-alpha-1, -alpha, depth-2, LMRSearch, cb)
 			} else {
 				score = alpha + 1
 			}
 			// if the move fails high, we search deeper
 			// PVS
+			// https://www.chessprogramming.org/Principal_Variation_Search
 			if score > alpha {
 				score = -alphabeta(-alpha-1, -alpha, depth-1, PVSSearch, cb)
-				// if the move fails high, we search deeper again to confirm the move is good and not a fluke
 				if (score > alpha) && (score < beta) {
 					score = -alphabeta(-beta, -alpha, depth-1, PVSSearch, cb)
 				}
@@ -152,14 +193,9 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 
 			bestMove = moveList[i]
 
-			// if moveList[i].GetMoveFlags()&board.MoveCaptures != 0 {
-			// historyMoves[(moveList[i].GetMoveStartPiece()+(board.SideToMove*6))-1][moveList[i].GetMoveEnd()] += depth * depth
-			// }
-
 			alpha = score
 
-			pvTable[board.Ply][board.Ply] = moveList[i]
-
+			pvTable[board.Ply][board.Ply] = bestMove
 			for j := board.Ply + 1; j < pvLength[board.Ply+1]; j++ {
 				pvTable[board.Ply][j] = pvTable[board.Ply+1][j]
 			}
@@ -167,22 +203,22 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 
 			// fails high
 			if score >= beta {
-				WriteTT(beta, depth, hashFlagBeta, bestMove)
+				WriteTT(score, depth, hashFlagBeta, bestMove)
 
-				if (moveList[i].GetMoveFlags() & (board.MoveCaptures | board.MoveKnightPromotion)) == 0 {
-					if killerMoves[0][board.Ply] != moveList[i] {
-						if score > MateScore {
-							mateKillerMoves[board.Ply] = killerMoves[1][board.Ply]
-						}
+				if isSafe {
+					if moveList[i] != killerMoves[0][board.Ply] {
 						killerMoves[1][board.Ply] = killerMoves[0][board.Ply]
 						killerMoves[0][board.Ply] = moveList[i]
 					}
-				}
-				// if i > 0 && (moveList[i].GetMoveFlags()&board.MoveCaptures) == 0 {
-				// counterMoves[board.SideToMove][moveList[i-1].GetMoveStart()][moveList[i-1].GetMoveEnd()] = moveList[i]
-				// }
 
-				return beta
+					hhScore[moveList[i].GetMoveStart()][moveList[i].GetMoveEnd()] += 1
+				}
+
+				return score
+			} else {
+				if isSafe {
+					bfScore[moveList[i].GetMoveStart()][moveList[i].GetMoveEnd()] += 1
+				}
 			}
 		}
 	}
@@ -196,7 +232,11 @@ func alphabeta(alpha int, beta int, depth int, flag int, cb *board.ChessBoard) i
 		}
 	}
 
-	WriteTT(alpha, depth, hashFlag, bestMove)
+	if hashFlag == hashFlagExact {
+		WriteTT(score, depth, hashFlag, bestMove)
+	} else {
+		WriteTT(alpha, depth, hashFlag, bestMove)
+	}
 
 	// fails low
 	return alpha
