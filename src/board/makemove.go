@@ -19,6 +19,12 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 		7: &cb.BlackPawns, 8: &cb.BlackKnights, 9: &cb.BlackBishops, 10: &cb.BlackRooks, 11: &cb.BlackQueen, 12: &cb.BlackKing,
 	}
 
+	HalfMoveClock++
+
+	if move.GetMoveStartPiece() == Pawn {
+		HalfMoveClock = 0
+	}
+
 	if Enpassant != 64 {
 		HashKey ^= enpassantKeys[Enpassant]
 	}
@@ -27,23 +33,24 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	Enpassant = 64
 
 	// Move piece to new square and update hash
-	*pieceArr[startPiece] ^= indexMasks[start] | indexMasks[end]
+	*pieceArr[startPiece] ^= IndexMasks[start] | IndexMasks[end]
 	HashKey ^= pieceKeys[startPiece-1][start] ^ pieceKeys[startPiece-1][end]
 
 	// Capture
 	if (flags & MoveCaptures) != 0 {
-		*pieceArr[CapturedPiece] ^= indexMasks[end]
+		HalfMoveClock = 0
+		*pieceArr[CapturedPiece] ^= IndexMasks[end]
 		HashKey ^= pieceKeys[CapturedPiece-1][end]
 	}
 	// Promotion
 	if flags >= MoveKnightPromotion {
-		*pieceArr[startPiece] ^= indexMasks[end]
+		*pieceArr[startPiece] ^= IndexMasks[end]
 		setBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
 		HashKey ^= pieceKeys[startPiece-1][end] ^ pieceKeys[PromotionToPiece[flags]+(6*SideToMove)-1][end]
 	}
 	// Enpassant capture
 	if flags == MoveEnpassantCapture {
-		*pieceArr[CapturedPiece] ^= indexMasks[end] | indexMasks[end+offsetBySide[SideToMove]]
+		*pieceArr[CapturedPiece] ^= IndexMasks[end] | IndexMasks[end+offsetBySide[SideToMove]]
 		HashKey ^= pieceKeys[CapturedPiece-1][end] ^ pieceKeys[CapturedPiece-1][end+offsetBySide[SideToMove]]
 	}
 	// Double pawn push
@@ -54,10 +61,10 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	// Castling
 	switch flags {
 	case MoveKingCastle:
-		*pieceArr[startPiece-2] ^= (indexMasks[end+1] | indexMasks[end-1])
+		*pieceArr[startPiece-2] ^= (IndexMasks[end+1] | IndexMasks[end-1])
 		HashKey ^= pieceKeys[startPiece-3][end+1] ^ pieceKeys[startPiece-3][end-1]
 	case MoveQueenCastle:
-		*pieceArr[startPiece-2] ^= (indexMasks[end-2] | indexMasks[end+1])
+		*pieceArr[startPiece-2] ^= (IndexMasks[end-2] | IndexMasks[end+1])
 		HashKey ^= pieceKeys[startPiece-3][end-2] ^ pieceKeys[startPiece-3][end+1]
 	}
 
@@ -121,22 +128,22 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 	Enpassant = 64
 
 	// Move piece to new square and update hash
-	*pieceArr[startPiece] ^= indexMasks[start] | indexMasks[end]
+	*pieceArr[startPiece] ^= IndexMasks[start] | IndexMasks[end]
 	HashKey ^= pieceKeys[startPiece-1][start] ^ pieceKeys[startPiece-1][end]
 
 	// Capture
-	*pieceArr[CapturedPiece] ^= indexMasks[end]
+	*pieceArr[CapturedPiece] ^= IndexMasks[end]
 	HashKey ^= pieceKeys[CapturedPiece-1][end]
 
 	// Promotion
 	if flags >= MoveKnightPromotionCapture {
-		*pieceArr[startPiece] ^= indexMasks[end]
+		*pieceArr[startPiece] ^= IndexMasks[end]
 		setBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
 		HashKey ^= pieceKeys[startPiece-1][end] ^ pieceKeys[PromotionToPiece[flags]+(6*SideToMove)-1][end]
 	}
 	// Enpassant capture
 	if flags == MoveEnpassantCapture {
-		*pieceArr[CapturedPiece] ^= indexMasks[end] | indexMasks[end+offsetBySide[SideToMove]]
+		*pieceArr[CapturedPiece] ^= IndexMasks[end] | IndexMasks[end+offsetBySide[SideToMove]]
 		HashKey ^= pieceKeys[CapturedPiece-1][end] ^ pieceKeys[CapturedPiece-1][end+offsetBySide[SideToMove]]
 	}
 
@@ -177,6 +184,10 @@ func (cb *ChessBoard) MakeMoveNull() {
 	if Enpassant != 64 {
 		HashKey ^= enpassantKeys[Enpassant]
 	}
+
+	// Increment halfmove clock
+	HalfMoveClock++
+
 	// Reset enpassant
 	Enpassant = 64
 
