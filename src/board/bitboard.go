@@ -52,7 +52,7 @@ var (
 	rookMasks     [64]uint64
 	rookAttacks   [64][4096]uint64
 	KingAttacks   [64]uint64
-	indexMasks    [64]uint64
+	IndexMasks    [64]uint64
 )
 
 // The following are used to initialise the attack tables
@@ -62,7 +62,7 @@ func attackLeaperInit() {
 		PawnAttacks[Black][i] = maskPawnAttacks(Black, i)
 		KnightAttacks[i] = maskKnightAttacks(i)
 		KingAttacks[i] = maskKingAttacks(i)
-		indexMasks[i] = 1 << i
+		IndexMasks[i] = 1 << i
 	}
 }
 
@@ -198,8 +198,8 @@ func PrintBitboardHex(bitboard uint64) {
 	fmt.Printf("%s\n", fmt.Sprintf("0x%X", bitboard))
 }
 
-// Used to print the move in a human readable format
-func PrintMove(move Move) {
+// used by PrintMoveList() to print consecutive moves
+func printMove(move Move) {
 	fmt.Printf("%4s%s%-6s%-10s%-12s%04b%5s%-4d", "",
 		IndexToSquare[move.GetMoveStart()],
 		IndexToSquare[move.GetMoveEnd()],
@@ -217,7 +217,7 @@ func PrintMoveList(move []Move) {
 		"", "Move", "Piece", "Captured", "Flags", "Score", "Index")
 	length := len(move)
 	for i := 0; i < length; i++ {
-		PrintMove(move[i])
+		printMove(move[i])
 		fmt.Printf("%9d\n", i)
 	}
 	fmt.Printf("\n")
