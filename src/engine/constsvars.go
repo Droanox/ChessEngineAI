@@ -43,11 +43,14 @@ var killerMoves [2][board.MaxPly]board.Move
 // that are used to find mate
 // var mateKillerMoves [board.MaxPly]board.Move
 
-// counterMoves is used to store the counter moves
-// var counterMoves [13][64]board.Move
-
+// relative history heuristic
 var hhScore [64][64]int
 var bfScore [64][64]int
+
+// Counter moves
+// var counterMoves [64][64]int
+
+// var movesMade = [board.MaxPly]board.Move{}
 
 ///////////////////////////////////////////////////////////////////
 // Aspiration windows
@@ -102,18 +105,14 @@ const fullDepthMoves int = 2 // Changeable by user
 
 // reductionLimit is the maximum number of reductions
 // that can be performed
-const reductionLimit int = 3 // Changeable by user
+const reductionLimit int = 2 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Null move pruning
 ///////////////////////////////////////////////////////////////////
 
-// R is the depth reduction factor for null move pruning
-// This is the number of plies to reduce the depth by
-// const nullMoveReduction int = 3 // Changeable by user
-
 // nullMoveDepth is the depth at which null move pruning is used
-const nullMoveDepth int = 5 // Changeable by user
+const nullMoveDepth int = 4 // Changeable by user
 
 ///////////////////////////////////////////////////////////////////
 // Transposition table
@@ -132,7 +131,7 @@ const hashFlagAlpha int = 1
 const hashFlagBeta int = 2
 
 // hashSize is the size of the hash table
-const hashSize uint64 = 1 << 22 // default: 1 << 22 // Changeable by user
+const hashSize uint64 = 1 * 1028 * 1028 // default: 1MB // Changeable by user
 
 // ttSize is the size of the transposition table
 var tt [hashSize]TranspositionTable
@@ -170,11 +169,5 @@ const MateScore = (MateValue - 1000)
 const moveOrderOffset = maxScore / 2
 
 // nodes is the number of nodes searched
-// This is used to print the number of nodes searched
-// in the search info
-// This is reset every time a search is performed
-// and is incremented every time a node is searched
+// This is used to print the number of nodes searched in the search info
 var nodes int
-
-// store static evals to check if position is getting better or worse as search progresses
-// var staticEvalHistory [board.MaxPly]int
