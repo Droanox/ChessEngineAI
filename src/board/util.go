@@ -10,9 +10,17 @@ import (
 ///////////////////////////////////////////////////////////////////
 
 // setBit sets a bit on a bitboard
-func setBit(bitboard *uint64, square int) {
+func SetBit(bitboard *uint64, square int) {
 	*bitboard |= (1 << uint64(square))
 }
+
+// // Move bits, moves a the bits a file. doesn't work when bits span a rank
+// func MoveBitsWhite(hex *uint64, square int) {
+// 	*hex = (*hex << square)
+// }
+// func MoveBitsBlack(hex *uint64, square int) {
+// 	*hex = (*hex >> square)
+// }
 
 // getBit returns a bit on a bitboard
 // mostly replace by indexMasks
@@ -199,7 +207,7 @@ func (cb *ChessBoard) ParseFen(fen string) (err error) {
 			file += int(val - '0')
 		// if the character is a piece, set the bitboard for that piece
 		default:
-			setBit(pieceMap[val], (8*rank)+file)
+			SetBit(pieceMap[val], (8*rank)+file)
 			file++
 		}
 	}
