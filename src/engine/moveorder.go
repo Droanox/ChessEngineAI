@@ -10,7 +10,7 @@ import (
 func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
 	moves := (*movelist)
 
-	for i := 0; i < len(moves); i++ {
+	for i := range moves {
 		flags := moves[i].GetMoveFlags()
 		switch {
 		case moves[i].Move == bestMove.Move:
@@ -23,21 +23,27 @@ func scoreMoves(movelist *[]board.Move, bestMove board.Move) {
 			moves[i].Score = moveOrderOffset + MVV_LVA[moves[i].GetMoveCapturedPiece()][moves[i].GetMoveStartPiece()]
 		case moves[i].Move == killerMoves[0][board.Ply].Move:
 			moves[i].Score = moveOrderOffset - 1
-		case moves[i].Move == killerMoves[1][board.Ply].Move:
+		case board.Ply > 1 && moves[i].Move == killerMoves[0][board.Ply-2].Move:
 			moves[i].Score = moveOrderOffset - 2
-		case flags == board.MoveKingCastle:
+		case moves[i].Move == killerMoves[1][board.Ply].Move:
 			moves[i].Score = moveOrderOffset - 3
-		case flags == board.MoveQueenCastle:
+		case board.Ply > 1 && moves[i].Move == killerMoves[1][board.Ply-2].Move:
 			moves[i].Score = moveOrderOffset - 4
+		case flags == board.MoveKingCastle:
+			moves[i].Score = moveOrderOffset - 5
+		case flags == board.MoveQueenCastle:
+			moves[i].Score = moveOrderOffset - 6
+		case flags >= board.MoveKnightPromotion:
+			moves[i].Score = moveOrderOffset - 7
 		default:
-			bf := bfScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()]
-			if bf > 0 {
-				moves[i].Score = hhScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()] / bf
+			if bfScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()] > 0 {
+				moves[i].Score = hhScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()] / bfScore[moves[i].GetMoveStart()][moves[i].GetMoveEnd()]
 			}
+
+			// if board.Ply > 0 && moves[i].Move == counterMoves[movesMade[board.Ply-1].GetMoveStart()][movesMade[board.Ply-1].GetMoveEnd()] {
+			// 	moves[i].Score += 5
+			// }
 		}
-		// if board.Ply > 0 && counterMoves[prevMoves[board.Ply-1].GetMoveStartPiece()+(6*board.SideToMove)][prevMoves[board.Ply-1].GetMoveEnd()].Move == moves[i].Move {
-		// moves[i].Score += 1
-		// }
 	}
 }
 
