@@ -21,7 +21,7 @@ func Search(depth int, cb *board.ChessBoard) {
 
 	// reset killer moves and history moves
 	killerMoves = [2][board.MaxPly]board.Move{}
-	// counterMoves = [2][64][64]board.Move{}
+	// mateKillerMoves = [board.MaxPly]board.Move{}
 	hhScore = [64][64]int{}
 	bfScore = [64][64]int{}
 
@@ -41,26 +41,31 @@ func Search(depth int, cb *board.ChessBoard) {
 	go listenForStop(isTimerOn)
 
 	for currDepth := 1; currDepth <= depth; currDepth++ {
-		// pvFollowed = true
-
 		// perform negamax search
-		var score int = alphabeta(alpha, beta, currDepth, StandardSearch, cb)
+		var score int = alphabeta(alpha, beta, currDepth, StandardSearch, 0, cb)
 
+		// check if search should be stopped
 		if IsStopped {
 			break
 		}
 
-		// aspiration window, if the score is outside the window, we search again
-		if (score <= alpha) || (score >= beta) {
-			alpha = minScore // -INFINITY
-			beta = maxScore  // INFINITY
-			currDepth--
-			continue
-		}
+		if depth > 2 && score > -MateValue && score < MateValue {
+			// aspiration window, if the score is outside the window, we search again
+			if (score <= alpha) || (score >= beta) {
+				if score >= beta {
+					beta = maxScore // INFINITY
+				}
+				if score <= alpha {
+					alpha = minScore // -INFINITY
+				}
+				currDepth--
+				continue
+			}
 
-		// set window up for next iteration
-		alpha = score - aspirationWindow
-		beta = score + aspirationWindow
+			// set window up for next iteration
+			alpha = score - aspirationWindow
+			beta = score + aspirationWindow
+		}
 
 		if pvLength[0] > 0 {
 			// print principal variation
