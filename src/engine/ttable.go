@@ -46,6 +46,11 @@ func ReadTT(alpha int, beta int, depth int, bestMove *board.Move) int {
 			}
 			if entryTT.flag == hashFlagBeta {
 				if score >= beta {
+					if entryTT.bestMove.GetMoveFlags()&board.MoveKnightPromotionCapture == 0 &&
+						entryTT.bestMove.Move != killerMoves[0][board.Ply].Move {
+						killerMoves[1][board.Ply] = killerMoves[0][board.Ply]
+						killerMoves[0][board.Ply] = entryTT.bestMove
+					}
 					return beta
 				}
 			}
