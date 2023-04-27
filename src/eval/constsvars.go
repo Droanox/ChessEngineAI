@@ -28,59 +28,61 @@ var WestIsolatedMasks = [64]uint64{}
 // Passed pawn masks, index by sidetomove and by square
 var PassedMasks = [2][64]uint64{}
 
-var KingSquares = [2][64]uint64{}
+var KingForwardSquares = [2][64]uint64{}
 
 ///////////////////////////////////////////////////////////////////
 // Pawn
 ///////////////////////////////////////////////////////////////////
 
 // if there is a doubled pawn, subtract this value from the evaluation
-var doublePawnPenaltyHalf int = 15
+var doublePawnPenaltyHalf = [2]int{6, 16}
 
 // If there is an isolated pawn, subtract this value from the evaluation
-var isolatedPawnPenaltyHalf = [2]int{13, 4}
+var isolatedPawnPenaltyHalf = [2]int{8, 22}
 
 // If there is a past pawn, add this value to the evaluation
-var pastPawnBonus = [8]int{0, 3, 11, 26, 37, 55, 103, 158}
+var pastPawnBonus = [7]int{0, 3, 11, 26, 55, 103, 158}
+
+//var pastPawnBonus = [7]int{0, 2, 12, 18, 58, 140, 240}
 
 ///////////////////////////////////////////////////////////////////
 // Knight
 ///////////////////////////////////////////////////////////////////
 
 // Mobility bonus for knights
-var knightMobility int = 5
+var knightMobility = 5
 
 // The less pawns there are, the less knights are worth
-var knightPawnPenalty int = 4
+var knightPawnPenalty = 8
 
 ///////////////////////////////////////////////////////////////////
 // Bishop
 ///////////////////////////////////////////////////////////////////
 
 // Mobility bonus for bishops
-var bishopMobility int = 6
+var bishopMobility = 6
 
 // if there is a bishop pair, add this value to the evaluation
-var bishopPairBonus int = 15
+var bishopPairBonus = 20
 
 ///////////////////////////////////////////////////////////////////
 // Rooks
 ///////////////////////////////////////////////////////////////////
 
 // if there is a semi-open file, add this value to the evaluation
-var semiOpenFile = 7
+var rookSemiOpenFile = 7
 
 // if there is an open file, add this value to the evaluation
-var openFile = 13
+var rookOpenFile = 13
 
 // count the number of queens and rooks on the same file, and award this bonus
-var stackedPieceBonus = 6
+var stackedPieceBonus = 5
 
 // if there is a rook on the seventh rank, add this value to the evaluation
-var rookOnSeventh = 8
+var rookOnSeventh = 6
 
 // The less pawns there are, the more rooks are worth
-var rookPawnBonus int = 4
+var rookPawnBonus = 8
 
 // Mobility bonus for rooks
 var rookMobility = [2]int{2, 4}
@@ -94,17 +96,36 @@ var rook7thRank = [2]uint64{
 // King
 ///////////////////////////////////////////////////////////////////
 
-// Number of attacks weight
-var numberOfAttacksWeight = [7]int{0, 50, 75, 88, 94, 97, 99}
+// if there is a semi-open file, subtract this value to the evaluation
+// var kingSemiOpenFile = 10
 
-// Multiply squares by this weight
-var attackerWeights = [5]int{15, 17, 17, 35, 70}
+// if there is an open file, subtract this value to the evaluation
+// var kingOpenFile = 17
 
 // Multiply pawn squares by this weight
-var pawnMultiplier = [2]int{14, 0}
+var pawnMultiplier = 15
 
 // Replace king wiht a queen, and see how many squares it sees, multiply by this value
-var kingTropismPenaltyMultiplier = 4
+var kingTropismPenaltyMultiplier = 3
+
+// Table to evaluate king safety, from stockfish
+// chessprogramming.org/King_Safety#Attack_Units
+var SafetyTable = []int{
+	0, 0, 1, 2, 3, 5, 7, 9, 12, 15,
+	18, 22, 26, 30, 35, 39, 44, 50, 56, 62,
+	68, 75, 82, 85, 89, 97, 105, 113, 122, 131,
+	140, 150, 169, 180, 191, 202, 213, 225, 237, 248,
+	260, 272, 283, 295, 307, 319, 330, 342, 354, 366,
+	377, 389, 401, 412, 424, 436, 448, 459, 471, 483,
+	494, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+	500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+	500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+	500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+}
+
+var Threat [2]int
+
+var KingAttackingPieces [2]int
 
 ///////////////////////////////////////////////////////////////////
 // Queen
@@ -115,7 +136,7 @@ var kingTropismPenaltyMultiplier = 4
 ///////////////////////////////////////////////////////////////////
 
 // Changes every time eval is called
-var PawnValue int = 82
+var PawnValue = 82
 
 // Values from http://www.talkchess.com/forum3/viewtopic.php?f=2&t=68311&start=19
 var (

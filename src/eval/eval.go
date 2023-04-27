@@ -28,8 +28,8 @@ func initMasks() {
 		EastIsolatedMasks[square] = ((FileMasks[square] << 1) &^ board.FileAOn)
 		WestIsolatedMasks[square] = ((FileMasks[square] >> 1) &^ board.FileHOn)
 		KingFileMasks[square] = EastIsolatedMasks[square] | FileMasks[square] | WestIsolatedMasks[square]
-		KingSquares[board.White][square] = board.KingAttacks[square] // | board.KingAttacks[Min(square+8, 63)]
-		KingSquares[board.Black][square] = board.KingAttacks[square] // | board.KingAttacks[Max(square-8, 0)]
+		KingForwardSquares[board.White][square] = (board.KingAttacks[square] | board.KingAttacks[Min(square+8, 63)]) - board.KingAttacks[square]
+		KingForwardSquares[board.Black][square] = (board.KingAttacks[square] | board.KingAttacks[Max(square-8, 0)]) - board.KingAttacks[square]
 		PassedMasks[board.White][square] = ((EastIsolatedMasks[square] | WestIsolatedMasks[square]) ^ FileMasks[square]) << (8 + (8 * (square / 8)))
 		PassedMasks[board.Black][square] = ((EastIsolatedMasks[square] | WestIsolatedMasks[square]) ^ FileMasks[square]) >> (8 + (8 * ((63 - square) / 8)))
 	}
@@ -47,13 +47,11 @@ func Eval(cb board.ChessBoard) int {
 		0: &cb.WhitePawns, 1: &cb.WhiteKnights, 2: &cb.WhiteBishops, 3: &cb.WhiteRooks, 4: &cb.WhiteQueen, 5: &cb.WhiteKing,
 		6: &cb.BlackPawns, 7: &cb.BlackKnights, 8: &cb.BlackBishops, 9: &cb.BlackRooks, 10: &cb.BlackQueen, 11: &cb.BlackKing,
 	}
-	var allPieceArr = []*uint64{
-		0: &cb.WhitePieces, 1: &cb.BlackPieces,
-	}
 
-	var side, square, gamephase, attackingPiecesCount, valueOfAttacks int
+	var side, square, gamephase, attackingPiecesCount int
 	var mg, eg, pawnsMissing [2]int
 	var kingSquares, pawnAttackSquares, unsafeSquares [2]uint64
+	var kingstart int
 
 	// Calculate the number of pieces on the board
 	var allPieces = cb.WhitePieces | cb.BlackPieces
@@ -67,16 +65,19 @@ func Eval(cb board.ChessBoard) int {
 	pawnsMissing[1] = 8 - board.BitCount(cb.BlackPawns)
 
 	// calculate the king moveable squares
-	kingSquares[0] = KingSquares[0][board.BitScanForward(cb.WhiteKing)] &^ allPieces
-	kingSquares[1] = KingSquares[1][board.BitScanForward(cb.BlackKing)] &^ allPieces
+	kingstart = board.BitScanForward(cb.WhiteKing)
+	kingSquares[0] = (board.KingAttacks[kingstart] &^ cb.WhitePieces) | KingForwardSquares[0][kingstart]
+	kingstart = board.BitScanForward(cb.BlackKing)
+	kingSquares[1] = (board.KingAttacks[kingstart] &^ cb.BlackPieces) | KingForwardSquares[1][kingstart]
 
-	// calculate the safe squares for pieces
-	unsafeSquares[0] = (*allPieceArr[board.Black] | pawnAttackSquares[board.Black])
-	unsafeSquares[1] = (*allPieceArr[board.White] | pawnAttackSquares[board.White])
+	// calculate the unsafe squares for pieces
+	unsafeSquares[0] = (cb.BlackPieces | pawnAttackSquares[board.Black])
+	unsafeSquares[1] = (cb.WhitePieces | pawnAttackSquares[board.White])
 
 	for i, pieceBoard := range pieceArr {
-		pieceBoardNew := pieceBoard
 		side = pieceToColour[i]
+		pieceBoardNew := pieceBoard
+		oppositePieceBoard := pieceArr[((1-side)*6)+(i%6)]
 		for bitboard := *pieceBoardNew; bitboard != board.EmptyBoard; bitboard &= bitboard - 1 {
 			square = board.BitScanForward(bitboard)
 			mg[side] += tableMG[i][square]
@@ -87,9 +88,8 @@ func Eval(cb board.ChessBoard) int {
 			case 0, 6: // Pawns
 				// double pawn penalty
 				if board.BitCount(FileMasks[square]&*pieceBoard) > 1 {
-					mg[side] -= doublePawnPenaltyHalf
-					eg[side] -= doublePawnPenaltyHalf
-					// fmt.Println("Double count penalty on:", "doublePawns", board.IndexToSquare[square], doublePawnPenalty)
+					mg[side] -= doublePawnPenaltyHalf[0]
+					eg[side] -= doublePawnPenaltyHalf[1]
 				}
 
 				// isolated pawn penalty
@@ -103,17 +103,16 @@ func Eval(cb board.ChessBoard) int {
 				}
 
 				// Passed pawn bonus
-				if PassedMasks[side][square]&*pieceArr[(1-side)*6] == 0 && *pieceArr[(side)*6]&board.IndexMasks[square+offsetBySide[side]] == 0 {
-					mg[side] += pastPawnBonus[(square^(56*side))/8] / 2
+				if PassedMasks[side][square]&*oppositePieceBoard == 0 && board.IndexMasks[square+offsetBySide[side]]&*pieceBoard == 0 {
+					mg[side] += pastPawnBonus[(square^(56*side))/8]
 					eg[side] += pastPawnBonus[(square^(56*side))/8]
-					// fmt.Println("Passed pawn bonus on:", board.IndexToSquare[square], PastPawnBonus[(square^(56*side))/8])
 				}
 			case 1, 7: // Knights
 				// decrease knight value as pawns decrease
 				mg[side] -= pawnsMissing[1-side] * knightPawnPenalty
 				eg[side] -= pawnsMissing[1-side] * knightPawnPenalty
 
-				// calcualte moveable squares
+				// calculate moveable squares
 				knightAttacks := board.KnightAttacks[square] &^ unsafeSquares[side]
 
 				// mobility bonus
@@ -122,14 +121,10 @@ func Eval(cb board.ChessBoard) int {
 				eg[side] += score * knightMobility
 
 				// king attack update
-				numAttacks := board.BitCount(knightAttacks&kingSquares[1-side]) * attackerWeights[1]
-				if numAttacks > 0 {
-					valueOfAttacks += numAttacks
-					attackingPiecesCount++
-				}
+				attackingPiecesCount += 2 * board.BitCount(knightAttacks&kingSquares[1-side])
 			case 2, 8: // Bishops
 				// bishop pair bonus
-				if board.BitCount(*pieceArr[2+(side*6)]) == 2 {
+				if board.BitCount(*pieceBoard) == 2 {
 					mg[side] += bishopPairBonus
 					eg[side] += bishopPairBonus
 				}
@@ -143,11 +138,7 @@ func Eval(cb board.ChessBoard) int {
 				eg[side] += score * bishopMobility
 
 				// king attack update
-				numAttacks := board.BitCount(bishopAttacks&kingSquares[1-side]) * attackerWeights[2]
-				if numAttacks > 0 {
-					valueOfAttacks += numAttacks
-					attackingPiecesCount++
-				}
+				attackingPiecesCount += 2 * board.BitCount(bishopAttacks&kingSquares[1-side])
 			case 3, 9: // Rooks
 				// increase rook value as pawns decrease
 				mg[side] += pawnsMissing[1-side] * rookPawnBonus
@@ -155,24 +146,21 @@ func Eval(cb board.ChessBoard) int {
 
 				// rook on open file bonus
 				if FileMasks[square]&(cb.WhitePawns|cb.BlackPawns) == 0 {
-					mg[side] += openFile
-					eg[side] += openFile / 2
-					// fmt.Println("Rook on open file bonus on:", board.IndexToSquare[square], openFile)
-					piecesOnFile := board.BitCount(FileMasks[square] & (*pieceArr[3+(side*6)] | *pieceArr[4+(side*6)]))
+					mg[side] += rookOpenFile
+					// give a bonus if there are multiple rooks or queens on the same file
+					piecesOnFile := board.BitCount(FileMasks[square] & (*pieceBoard | *pieceArr[4+(side*6)]))
 					if piecesOnFile > 1 {
 						mg[side] += stackedPieceBonus * piecesOnFile
 					}
 				} else
 				// rook on semi open file bonus
 				if FileMasks[square]&*pieceArr[side*6] == 0 {
-					mg[side] += semiOpenFile
-					eg[side] += semiOpenFile / 2
-					// fmt.Println("Rook on semi open file bonus on:", board.IndexToSquare[square], semiOpenFile)
+					mg[side] += rookSemiOpenFile
 				}
 
 				// rook on seventh rank bonus
 				if (RankMasks[square])&rook7thRank[side] != 0 {
-					pawnsOnSeventh := board.BitCount(board.GetRookAttacks(square, allPieces) & *pieceArr[(1-side)*6])
+					pawnsOnSeventh := board.BitCount(rook7thRank[side] & *pieceArr[(1-side)*6])
 					mg[side] += rookOnSeventh * pawnsOnSeventh
 					eg[side] += rookOnSeventh * pawnsOnSeventh
 				}
@@ -186,43 +174,37 @@ func Eval(cb board.ChessBoard) int {
 				eg[side] += score * rookMobility[1]
 
 				// king attack update
-				numAttacks := board.BitCount(rookAttacks&kingSquares[1-side]) * attackerWeights[3]
-				if numAttacks > 0 {
-					valueOfAttacks += numAttacks
-					attackingPiecesCount++
-				}
+				attackingPiecesCount += 3 * board.BitCount(rookAttacks&kingSquares[1-side])
 			case 4, 10: // Queens
 				queenAttacks := board.GetQueenAttacks(square, allPieces) &^ unsafeSquares[side]
 
 				// king attack update
-				numAttacks := board.BitCount(queenAttacks&kingSquares[1-side]) * attackerWeights[4]
-				if numAttacks > 0 {
-					valueOfAttacks += numAttacks
-					attackingPiecesCount++
-				}
+				attackingPiecesCount += 5 * board.BitCount(queenAttacks&kingSquares[1-side])
 			case 5, 11: // Kings
 				// king on open file penalty
-				if KingFileMasks[square]&(cb.WhitePawns|cb.BlackPawns) == 0 {
-					mg[side] -= openFile * 2
-					// fmt.Println("King on open file penalty on:", board.IndexToSquare[square], openFile)
-				} else
-				// king on semi open file penalty
-				if KingFileMasks[square]&*pieceArr[side*6] == 0 {
-					mg[side] -= semiOpenFile * 2
-					// fmt.Println("King on semi open file penalty on:", board.IndexToSquare[square], semiOpenFile)
-				}
+				// if KingFileMasks[square]&(cb.WhitePawns|cb.BlackPawns) == 0 {
+				// 	mg[side] -= kingOpenFile
+				// 	if KingFileMasks[square]&(*pieceArr[3+((1-side)*6)]|*pieceArr[4+((1-side)*6)]) != 0 {
+				// 		mg[side] -= kingOpenFile * 2
+				// 	}
+				// } else
+				// // king on semi open file penalty
+				// if KingFileMasks[square]&*pieceArr[side*6] == 0 {
+				// 	mg[side] -= kingSemiOpenFile
+				// }
 
 				// attacking king zone
 				// Idea from https://www.chessprogramming.org/King_Safety#Attacking_King_Zone
-				mg[side] += (valueOfAttacks * numberOfAttacksWeight[Min(attackingPiecesCount, 6)]) / 100
+				mg[side] += SafetyTable[Min(attackingPiecesCount, 99)]
+				// Add how many pieces are attacking the opponent for use in search.
+				KingAttackingPieces[side] = attackingPiecesCount
+				attackingPiecesCount = 0
 
 				// pawn shield
-				mg[side] += board.BitCount(board.KingAttacks[square]&*pieceArr[side*6]) * pawnMultiplier[0]
+				mg[side] += board.BitCount(board.KingAttacks[square]&*pieceArr[side*6]) * pawnMultiplier
 
 				// king tropism
 				mg[side] -= board.BitCount((board.GetQueenAttacks(square, allPieces) &^ unsafeSquares[side])) * kingTropismPenaltyMultiplier
-
-				attackingPiecesCount, valueOfAttacks = 0, 0
 			}
 		}
 	}
@@ -239,16 +221,20 @@ func Eval(cb board.ChessBoard) int {
 	// Recalculate pawn value
 	PawnValue = ((PieceValuesMG[0] * phaseMG) + (PieceValuesEG[0] * phaseEG)) / 24
 
+	// adjust king attacking pieces depending on game phase
+	KingAttackingPieces[0] = ((KingAttackingPieces[0] * phaseMG) + (1 * phaseEG)) / 24
+	KingAttackingPieces[1] = ((KingAttackingPieces[1] * phaseMG) + (1 * phaseEG)) / 24
+
 	// return tapered evaluation
-	return ((scoreMG * phaseMG) + (scoreEG * phaseEG)) / 24
+	return (((scoreMG * phaseMG) + (scoreEG * phaseEG)) / 24)
 }
 
 // IsEndGame returns true if the given chess board is an end game
 // isn't perfect, for quick computation
 func IsEndGame(cb board.ChessBoard) bool {
 	if board.SideToMove == board.White {
-		return (cb.WhiteRooks|cb.WhiteQueen) == 0 && cb.WhitePawns != 0
+		return cb.WhitePieces&(cb.WhitePawns|cb.WhiteKing) == cb.WhitePieces
 	} else {
-		return (cb.BlackRooks|cb.BlackQueen) == 0 && cb.BlackPawns != 0
+		return cb.BlackPieces&(cb.BlackPawns|cb.BlackKing) == cb.BlackPieces
 	}
 }
