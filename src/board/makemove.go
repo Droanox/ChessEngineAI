@@ -45,7 +45,7 @@ func (cb *ChessBoard) MakeMove(move Move) bool {
 	// Promotion
 	if flags >= MoveKnightPromotion {
 		*pieceArr[startPiece] ^= IndexMasks[end]
-		setBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
+		SetBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
 		HashKey ^= pieceKeys[startPiece-1][end] ^ pieceKeys[PromotionToPiece[flags]+(6*SideToMove)-1][end]
 	}
 	// Enpassant capture
@@ -138,7 +138,7 @@ func (cb *ChessBoard) MakeCapture(move Move) bool {
 	// Promotion
 	if flags >= MoveKnightPromotionCapture {
 		*pieceArr[startPiece] ^= IndexMasks[end]
-		setBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
+		SetBit(pieceArr[PromotionToPiece[flags]+(6*SideToMove)], end)
 		HashKey ^= pieceKeys[startPiece-1][end] ^ pieceKeys[PromotionToPiece[flags]+(6*SideToMove)-1][end]
 	}
 	// Enpassant capture

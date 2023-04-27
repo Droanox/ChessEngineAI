@@ -23,7 +23,7 @@ import (
 //
 
 // ChessBoard is the main data structure for the chess engine
-// Containing the bitboards for each piece and the current side to move
+// Containing the bitboards for each piece and collections of pieces from both sides
 type ChessBoard struct {
 	WhitePawns   uint64
 	WhiteKnights uint64

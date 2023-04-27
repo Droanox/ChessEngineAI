@@ -14,7 +14,7 @@ func blackPawnAnyAttack(pawns uint64) uint64 {
 // idea from https://www.chessprogramming.org/Pawn_Attacks_(Bitboards)
 func maskPawnAttacks(side uint8, square int) uint64 { // TODO
 	var bitboard uint64
-	setBit(&bitboard, square)
+	SetBit(&bitboard, square)
 	if side == White {
 		return whitePawnAnyAttack(bitboard)
 	} else {
@@ -26,7 +26,7 @@ func maskPawnAttacks(side uint8, square int) uint64 { // TODO
 // idea from https://www.chessprogramming.org/Knight_Pattern
 func maskKnightAttacks(square int) uint64 {
 	var bitboard, half1, half2 uint64
-	setBit(&bitboard, square)
+	SetBit(&bitboard, square)
 
 	half1 = ((bitboard >> 1) & ^FileHOn) | ((bitboard << 1) & ^FileAOn)
 	half2 = ((bitboard >> 2) & ^FileGHOn) | ((bitboard << 2) & ^FileABOn)
@@ -38,7 +38,7 @@ func maskKnightAttacks(square int) uint64 {
 // idea from https://www.chessprogramming.org/King_Pattern
 func maskKingAttacks(square int) uint64 { // TODO
 	var attacks, bitboard uint64
-	setBit(&bitboard, square)
+	SetBit(&bitboard, square)
 
 	attacks = ((bitboard << 1) &^ FileAOn) | ((bitboard >> 1) &^ FileHOn)
 	bitboard |= attacks

@@ -148,7 +148,7 @@ var (
 	chessBoardCopies [MaxPly]ChessBoard
 	hashKeyCopies    [MaxPly]uint64
 	aspectsCopies    [MaxPly][5]int
-	// Ply is incremented after each coard copy, and decremented after each board make (paste)
+	// Ply is incremented after each board copy, and decremented after each board make (paste)
 	Ply int = 0
 )
 
